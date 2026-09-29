@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="以世界版画为背景的极简互动书架，收录十本主题摄影画册。">
+  <title>世界视觉档案 · AI 画册系统</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23f4ead3'/%3E%3Ccircle cx='32' cy='32' r='22' fill='%2335556b'/%3E%3Cpath d='M10 33c9-8 18-4 25-13 4 7 11 10 19 9v12c-9-3-16-1-22 7-5-8-13-8-22-4z' fill='%23ad563f'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="system.css">
+</head>
+<body>
+  <main class="atlas-shell" id="libraryView">
+    <section class="library-hero" aria-labelledby="atlas-title">
+      <div class="hero-copy">
+        <p class="eyebrow">CURATED WITH AI · BOUND BY MEMORY</p>
+        <h1 id="atlas-title"><span>把世界收进</span><em>一排书脊</em></h1>
+      </div>
+
+      <section class="shelf-zone" aria-label="互动画册书架">
+        <div class="shelf" id="shelf" role="group" aria-label="十本互动摄影画册"></div>
+        <div class="shelf-base" aria-hidden="true"></div>
+      </section>
+    </section>
+  </main>
+
+  <section class="reader-layer" id="readerLayer" aria-hidden="true">
+    <header>
+      <button id="closeReader" aria-label="返回世界书架">← 返回世界书架</button>
+      <p><span id="readerBookTitle">南昌</span><small id="readerBookIssue">NANCHANG</small></p>
+      <span class="header-balance" aria-hidden="true"></span>
+    </header>
+    <iframe id="bookFrame" title="互动画册阅读器" loading="eager"></iframe>
+  </section>
+
+  <script src="system.js"></script>
+</body>
+</html>

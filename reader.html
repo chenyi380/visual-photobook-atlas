@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="世界视觉档案主题画册阅读器">
+  <title>世界视觉档案 · 主题画册</title>
+  <link rel="stylesheet" href="reader.css">
+</head>
+<body>
+  <main class="reader-shell">
+    <header class="reader-head">
+      <p><span id="headTitle">火与冰</span></p>
+      <p class="head-center" id="headEnglish">ICELAND / ELEMENTAL SILENCE</p>
+      <p class="head-status"><span id="orientation">跨页</span><b id="pageStatus">封面</b></p>
+    </header>
+    <section class="book-stage" aria-label="可翻页主题画册">
+      <div id="book" data-page-width="512" data-page-height="640"></div>
+    </section>
+    <footer class="reader-controls">
+      <button id="previous" aria-label="上一页">←</button>
+      <p><b id="controlTitle">火与冰</b><span>拖动页角、点击页面或使用方向键翻页</span></p>
+      <button id="next" aria-label="下一页">→</button>
+    </footer>
+  </main>
+  <script src="shared/page-flip.browser.js"></script>
+  <script src="reader-data.js"></script>
+  <script src="reader.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="2026年9月24日至27日南昌之旅拼贴画册，共收录79张照片。">
+  <title>南昌旅行画册</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="collage.css">
+</head>
+<body>
+<main class="room">
+  <header class="book-header">
+    <span>2026.9.24—27</span><h1>南昌</h1><span id="orientation">打开画册</span>
+  </header>
+  <section class="stage" aria-label="南昌之旅互动拼贴画册">
+    <div class="book-rig">
+      <div id="book" class="book" data-page-width="512" data-page-height="640">
+        <article class="book-page art-page cloth collage-cover recto" data-density="hard" aria-label="封面">
+          <div class="cover-memory" aria-hidden="true">
+            <img src="assets/art/station-print.png" alt="">
+          </div>
+          <div class="cover-copy">
+            <p>TRAVEL NOTES · 2026</p>
+            <h2>南昌</h2>
+          </div>
+          <div class="cover-date">9.24——27<br><span>朋友、旧城与夜色</span></div>
+        </article>
+        <article class="book-page art-page cloth collage-back verso" data-density="hard" aria-label="封底">
+          <span class="back-mark">南昌 · 2026</span>
+          <p>Clay / Blessing / Wheel / Square / Eaves / Night</p>
+        </article>
+      </div>
+    </div>
+  </section>
+  <footer class="controls" aria-label="画册翻页控制">
+    <button id="previous" type="button" aria-label="上一页">←</button>
+    <div class="status" aria-live="polite"><span id="page-status">封面</span><small>拖动页面，或使用方向键翻页</small></div>
+    <button id="next" type="button" aria-label="下一页">→</button>
+  </footer>
+</main>
+<script src="vendor/page-flip.browser.js"></script>
+<script src="book-data.js"></script>
+<script src="flipbook.js"></script>
+</body>
+</html>
