@@ -4,6 +4,11 @@
 
 ## 3D 地球贴图
 
+- 当前银河背景与十个彩色小星球为内置图像生成的独立美术素材，分别保存在 `assets/galaxy-reference.jpg` 和 `assets/planets/`。提示词：深黑银河、左侧蓝紫尘埃、密集微星、中心留暗；十色立体小星球、冷色侧光、真实透明背景。它们是视觉设计，不是实测天体。
+- 城市地图道路、水系、岸线来源：OpenStreetMap contributors，经公开 Overpass 只读接口一次提取并缓存。南昌 7774 个地图元素，直岛 2323 个地图元素。现场地图保留可见署名。许可与来源：https://www.openstreetmap.org/copyright 。非导航用途，旅游地标点为示意定位。
+- 冰岛、摩洛哥地图沿用 Natural Earth 国家边界。公开道路接口返回超时，因此未伪造国家内部路网。
+- 当前投影参照用户的 Venice 图片复现地图编辑样式，使用 Georgia / Times New Roman 衬线字形、细白线、地标引线、公里尺及北向标。未复制威尼斯地图到南昌，也不声称拥有参考图的原始字体文件。
+
 - 夜间灯光：NASA Earth Observatory / Black Marble 2016，官方页面 https://science.nasa.gov/earth/earth-observatory/earth-at-night/maps/ 。原始 13500 × 6750 彩色全球图：https://assets.science.nasa.gov/content/dam/science/esd/eo/images/imagerecords/144000/144898/BlackMarble_2016_3km.jpg 。网页使用 4096 × 2048 本地副本，按真实经纬度叠加到 WebGL 球面上。夜间地图是卫星数据合成，不是实时城市灯光。
 - 夜景表现参考用户提供的 SpaceEngine 截图；未复制截图、水印或 SpaceEngine 软件资源。光照、夜面灯光发射、云层和薄层大气辉光由项目独立渲染。
 - 全部画册投影地图使用真实坐标。南昌使用江西地级市边界；冰岛、日本、摩洛哥使用 Natural Earth 1:50m 国家边界（公开领域）：https://www.naturalearthdata.com/about/terms-of-use/ 。这些是旅行定位示意，不用于导航。

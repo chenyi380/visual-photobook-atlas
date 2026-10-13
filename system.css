@@ -169,4 +169,46 @@ body.orbits-open .holographic-book { opacity:1; transform:scale(1); }
   .memory-projection figcaption span { font-size:23px; }
   .memory-projection figcaption small { max-width:106px; font-size:6px; }
 }
+/* Reference-locked space atlas and Venice-style editorial map projection. */
+#orbitCanvas { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
+.cosmos-stage::after { background:none; }
+.hero-copy,.earth-interface { display:none; }
+.atlas-toggle { top:30px; right:40px; padding:10px 19px; border-color:#8db8ff9c; box-shadow:0 0 10px #679cff15; background:#050d1a9c; }
+.atlas-toggle svg { display:none; }
+.planet-art { position:absolute; inset:0; opacity:1; transition:opacity .75s,filter .3s; }
+.planet-art>img { display:block; width:100%; height:100%; object-fit:contain; transform:rotate(var(--rock-turn)); filter:drop-shadow(0 0 5px #77bfff66); }
+.planet-art>span { position:absolute; left:50%; top:100%; transform:translateX(-50%); padding:6px 9px; font:400 13px/1.2 var(--serif); white-space:nowrap; opacity:0; transition:opacity .25s; text-shadow:0 0 10px #000; }
+.orbital-book:hover .planet-art>span,.orbital-book:focus-visible .planet-art>span { opacity:1; }
+.orbital-book:hover .planet-art { filter:brightness(1.18) drop-shadow(0 0 10px #acd6ff99); }
+body.orbits-open .planet-art { opacity:0; }
+.holographic-book { padding:7px; gap:11px; border:1px solid #a5c9ffb8; border-radius:9px; background:linear-gradient(130deg,#759bf82b,#08142fa8 65%,#3166aa2b); box-shadow:inset 0 0 14px #9dcaff29,0 0 15px #81b2ff26; }
+.orbital-title b { font-family:Georgia,'Songti SC','STSong',serif; font-size:clamp(16px,1.20vw,21px); font-weight:400; }
+.orbital-title small { font:400 clamp(8px,.70vw,12px)/1.2 Georgia,'Times New Roman',serif; letter-spacing:.045em; }
+.orbital-book.active .holographic-book { border:1.5px solid #d6f3ff; box-shadow:0 0 7px #77c5ff,0 0 24px #63a4ffa6,inset 0 0 25px #3d91df66; background:linear-gradient(120deg,#4b91d885,#071a42d9); }
+.orbit-guides { stroke:#80aaffc7; stroke-width:1.15; filter:drop-shadow(0 0 4px #568cff99); }
+.memory-projection { width:500px; height:289px; border:1px solid #94c1ffb3; border-radius:8px; background:#acc3cd; box-shadow:0 0 5px #579bff8c,0 0 25px #549af633; }
+.projection-image { background:#a7c4d1; }
+.projection-image img { opacity:.82; object-position:50% 70%; filter:saturate(.43) brightness(1.20) contrast(.76); transform:scale(1.025); }
+.projection-image::after { background:linear-gradient(180deg,#adc7d8d9 0%,#c4d8dfe0 34%,#cedce0bb 67%,#c1d1d359 100%); }
+.projection-image::before { content:''; position:absolute; z-index:2; left:55%; top:0; width:45%; height:62%; background:radial-gradient(ellipse at 48% 28%,#fffef5ed 0%,#fffce2ad 9%,#fff3d94d 22%,transparent 57%); mix-blend-mode:screen; pointer-events:none; }
+.projection-map { z-index:3; width:100%; height:100%; inset:0; object-fit:fill; opacity:1; filter:none; }
+.memory-projection figcaption { z-index:4; left:4.7%; top:7.8%; max-width:45%; padding:0; gap:0; color:#334e5e; text-shadow:none; }
+.memory-projection figcaption span { font:400 calc(51px * var(--projection-unit,.56))/1.15 Georgia,'Times New Roman',serif; letter-spacing:.21em; }
+.memory-projection figcaption small { max-width:none; margin-top:6px; color:#334e5e; font:400 calc(19px * var(--projection-unit,.56))/1.2 Georgia,'Times New Roman',serif; letter-spacing:.3em; }
+#projectionCoordinates { display:none; }
+#projectionLandmarks { margin:17px 0 0; padding-left:18px; color:#354e5b; font:400 max(10px,calc(14px * var(--projection-unit,.56)))/1.55 Georgia,'Times New Roman',serif; letter-spacing:.01em; }
+#projectionLandmarks li { padding-left:7px; white-space:nowrap; }
+.projection-beam { filter:drop-shadow(0 0 5px #78c5ff55); }
+.orbit-hint { bottom:38px; font:400 13px/1.4 Georgia,'Songti SC',serif; color:#bdcddd; letter-spacing:.12em; }
+@media(max-width:720px) {
+  .atlas-toggle { top:22px; right:18px; padding:8px 13px; }
+  .holographic-book { padding:4px; gap:5px; }
+  .orbital-title b,.type-kai .orbital-title b { font-size:11px; }
+  .type-bold .orbital-title b,.type-hei .orbital-title b,.type-sans .orbital-title b { font-size:10px; }
+  .orbital-title small { font-size:5px; }
+  .memory-projection figcaption { left:4.7%; top:7.8%; gap:0; }
+  #projectionLandmarks { font-size:6px; line-height:1.55; margin-top:10px; padding-left:11px; }
+  #projectionLandmarks li { padding-left:3px; }
+  .orbit-hint { font-size:9px; bottom:25px; }
+}
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { transition-duration:.001ms !important; } }
