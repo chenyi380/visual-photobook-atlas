@@ -4,6 +4,10 @@
 
 ## 3D 地球贴图
 
+- 当前贴图 `assets/earth-blue-marble-2k.jpg`：NASA/Goddard Space Flight Center Scientific Visualization Studio，Equirectangular Projected Earth for LARGEST，2048 × 1024。https://svs.gsfc.nasa.gov/3615/
+- 江西地图行政区域：阿里云 DataV 地理边界服务，江西省各地级市边界。https://geo.datav.aliyun.com/areas_v3/bound/360000_full.json 。南昌定位为 28.68° N，115.86° E。
+- 高清贴图与区域地图直接嵌入 `system.js`；通过 WebGL 球体网格实时旋转、缩放，并以同一地理坐标变换投影地点标记。
+
 - `assets/earth-blue-marble.jpg`：NASA Goddard Space Flight Center Scientific Visualization Studio，Blue Marble 2015 平面地图贴图（1024 × 512）。原始页面：https://svs.gsfc.nasa.gov/30763
 - 网页在本地 Canvas 中对该等距柱状投影贴图进行球面采样、明暗计算与大气辉光渲染；星空、轨道、地点标记和流光均由项目代码实时生成。
 
