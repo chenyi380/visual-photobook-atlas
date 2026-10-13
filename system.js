@@ -285,13 +285,13 @@ class OrbitalLibrary {
   bookPose(index) {
     const layer = index < 5 ? 0 : 1;
     const mobile = this.globe.width < 720;
-    const radius = Math.min(this.globe.baseRadius * (layer ? 2.48 : 2.03), this.globe.width * (mobile ? (layer ? .34 : .28) : (layer ? .40 : .33)));
-    const angle = this.phase * (layer ? -.76 : 1) + index % 5 / 5 * Math.PI * 2 + (layer ? .64 : 0);
+    const radius = Math.min(this.globe.baseRadius * 2.40, this.globe.width * (mobile ? .34 : .38));
+    const angle = this.phase + index % 5 / 5 * Math.PI * 2 + (layer ? Math.PI / 5 : 0);
     const depth = Math.cos(angle);
-    const dy = depth * radius * (mobile ? .74 : .36) + (layer ? 44 : -44);
+    const dy = depth * (mobile ? 65 : 75) + (layer ? (mobile ? 98 : 120) : (mobile ? -98 : -120));
     const dx = Math.sin(angle) * radius;
-    return { x: this.globe.centerX + dx * Math.cos(-.10) - dy * Math.sin(-.10),
-      y: this.globe.restCenterY + dx * Math.sin(-.10) + dy * Math.cos(-.10), depth,
+    return { x: this.globe.centerX + dx,
+      y: this.globe.restCenterY + dy, depth,
       scale: .85 + (depth + 1) * .09, width: mobile ? 90 : 146, height: mobile ? 51 : 68,
       turn: -Math.sin(angle) * 23, roll: -3 };
   }
@@ -322,14 +322,15 @@ class OrbitalLibrary {
     }
     for (const [index, id] of [[0, 'orbitGuideOne'], [5, 'orbitGuideTwo']]) {
       const layer = index > 0;
-      const radius = Math.min(this.globe.baseRadius * (layer ? 2.48 : 2.03), this.globe.width * (this.globe.width < 720 ? (layer ? .34 : .28) : (layer ? .40 : .33)));
+      const mobile = this.globe.width < 720;
+      const radius = Math.min(this.globe.baseRadius * 2.40, this.globe.width * (mobile ? .34 : .38));
       const ellipse = document.querySelector(`#${id}`);
       if (!ellipse) continue;
       ellipse.setAttribute('cx', this.globe.centerX);
-      ellipse.setAttribute('cy', this.globe.restCenterY + (layer ? 44 : -44));
+      ellipse.setAttribute('cy', this.globe.restCenterY + (layer ? (mobile ? 98 : 120) : (mobile ? -98 : -120)));
       ellipse.setAttribute('rx', radius);
-      ellipse.setAttribute('ry', radius * (this.globe.width < 720 ? .74 : .36));
-      ellipse.setAttribute('transform', `rotate(-5.7 ${this.globe.centerX} ${this.globe.restCenterY})`);
+      ellipse.setAttribute('ry', mobile ? 65 : 75);
+      ellipse.removeAttribute?.('transform');
     }
   }
 }
