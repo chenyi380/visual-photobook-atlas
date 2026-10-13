@@ -200,6 +200,7 @@ body.orbits-open .planet-art { opacity:0; }
 #projectionLandmarks li { padding-left:7px; white-space:nowrap; }
 .projection-beam { filter:drop-shadow(0 0 5px #78c5ff55); }
 .orbit-hint { bottom:38px; font:400 13px/1.4 Georgia,'Songti SC',serif; color:#bdcddd; letter-spacing:.12em; }
+body:not(.orbits-open) .orbit-hint { bottom:18px; }
 @media(max-width:720px) {
   .atlas-toggle { top:22px; right:18px; padding:8px 13px; }
   .holographic-book { padding:4px; gap:5px; }
