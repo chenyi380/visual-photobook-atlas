@@ -272,7 +272,7 @@ class OrbitalLibrary {
   }
   planetOrbit(index, angle) {
     const mobile = this.globe.width < 720;
-    const aspect = .53 + index % 3 * .015;
+    const aspect = mobile ? .93 + index % 3 * .01 : .53 + index % 3 * .015;
     const node = [-.08,.06,-.02,.09,-.065][index % 5];
     const vertical = Math.sqrt(Math.sin(node)**2 + (aspect*Math.cos(node))**2);
     const radius = Math.min(this.globe.baseRadius * (2.7 + index % 3 * .10), this.globe.width * .43, this.globe.height * .38 / vertical);
