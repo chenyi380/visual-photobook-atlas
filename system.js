@@ -586,9 +586,10 @@ class StarGlobe {
       const labelX = point.x + side * 24;
       context.save();
       const title = book.title === "南昌" ? "南昌 · 江西 · 中国" : book.place;
-      context.font = "600 19px Microsoft YaHei, Arial, sans-serif";
+      const titleFont = this.width < 720 ? "600 16px Microsoft YaHei, Arial, sans-serif" : "600 19px Microsoft YaHei, Arial, sans-serif";
+      context.font = titleFont;
       const labelWidth = context.measureText(title).width + 22;
-      const boxX = side > 0 ? labelX - 2 : labelX - labelWidth + 2;
+      const boxX = clamp(side > 0 ? labelX - 2 : labelX - labelWidth + 2, 16, this.width - labelWidth - 16);
       context.fillStyle = "rgba(4, 16, 30, .87)";
       context.fillRect(boxX, point.y - 39, labelWidth, 66);
       context.strokeStyle = "rgba(151, 211, 246, .44)";
@@ -601,12 +602,12 @@ class StarGlobe {
       context.lineTo(labelX + side * 52, point.y);
       context.stroke();
       context.fillStyle = "rgba(226, 244, 255, .92)";
-      context.font = "600 19px Microsoft YaHei, Arial, sans-serif";
-      context.textAlign = side > 0 ? "left" : "right";
-      context.fillText(title, labelX + side * 6, point.y - 12);
+      context.font = titleFont;
+      context.textAlign = "left";
+      context.fillText(title, boxX + 11, point.y - 12);
       context.fillStyle = "rgba(160, 206, 231, .72)";
       context.font = "500 12px Inter, Arial, sans-serif";
-      context.fillText(`${Math.abs(book.lat).toFixed(2)}° ${book.lat >= 0 ? "N" : "S"} / ${Math.abs(book.lon).toFixed(2)}° ${book.lon >= 0 ? "E" : "W"}`, labelX + side * 6, point.y + 18);
+      context.fillText(`${Math.abs(book.lat).toFixed(2)}° ${book.lat >= 0 ? "N" : "S"} / ${Math.abs(book.lon).toFixed(2)}° ${book.lon >= 0 ? "E" : "W"}`, boxX + 11, point.y + 18);
       context.restore();
     }
   }
