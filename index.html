@@ -3,40 +3,55 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="以世界版画为背景的极简互动书架，收录十本主题摄影画册。">
+  <meta name="description" content="在旋转地球与星空之间，探索十本旅行画册与它们的记忆坐标。">
   <title>世界视觉档案 · AI 画册系统</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23f4ead3'/%3E%3Ccircle cx='32' cy='32' r='22' fill='%2335556b'/%3E%3Cpath d='M10 33c9-8 18-4 25-13 4 7 11 10 19 9v12c-9-3-16-1-22 7-5-8-13-8-22-4z' fill='%23ad563f'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="system.css?v=20261013d">
+  <link rel="stylesheet" href="system.css?v=20261013-orbit1">
 </head>
 <body>
   <main class="atlas-shell" id="libraryView">
     <section class="library-hero" aria-labelledby="atlas-title">
-      <div class="cosmos-stage" aria-hidden="true">
-        <canvas id="spaceCanvas"></canvas>
-        <canvas id="earthCanvas"></canvas>
-        <canvas id="effectsCanvas"></canvas>
-        <div class="orbit-ring orbit-ring-one"></div>
-        <div class="orbit-ring orbit-ring-two"></div>
+      <div class="cosmos-stage">
+        <canvas id="spaceCanvas" aria-hidden="true"></canvas>
+        <canvas id="earthCanvas" aria-hidden="true"></canvas>
+        <canvas id="effectsCanvas" aria-hidden="true"></canvas>
+        <svg id="orbitGuides" class="orbit-guides" aria-hidden="true"><ellipse id="orbitGuideOne"/><ellipse id="orbitGuideTwo"/></svg>
+        <div class="orbital-library" id="shelf" role="group" aria-label="环绕地球的十本旅行画册" aria-hidden="true"></div>
+        <svg class="projection-beam" id="projectionBeam" aria-hidden="true">
+          <defs><linearGradient id="hologramLight" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9cdcff" stop-opacity=".3"/><stop offset="1" stop-color="#86cfff" stop-opacity=".01"/></linearGradient></defs>
+          <polygon id="projectionCone" fill="url(#hologramLight)"/>
+          <path id="projectionLine" fill="none" stroke="#b8e4ff" stroke-opacity=".52" stroke-width=".8"/>
+        </svg>
+        <figure class="memory-projection" id="memoryProjection" aria-hidden="true">
+          <div class="projection-image"><img id="projectionImage" alt=""><i></i></div>
+          <figcaption><span id="projectionTitle"></span><small id="projectionPlace"></small></figcaption>
+        </figure>
       </div>
+
+      <button class="atlas-toggle" id="toggleAtlas" aria-label="打开画册星环" aria-expanded="false" aria-controls="shelf">
+        <svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="8"/><circle cx="15" cy="15" r="2"/><path d="M4 15h3m16 0h3M15 4v3m0 16v3"/></svg>
+        <span>画册星环</span>
+      </button>
+      <button class="back-to-space" id="backToSpace" hidden>← 返回星空</button>
 
       <div class="hero-copy">
         <p class="eyebrow">MEMORY ATLAS · ORBITING ARCHIVE</p>
         <h1 id="atlas-title"><span>把世界收进</span><em>一排书脊</em></h1>
       </div>
 
-      <section class="shelf-zone" aria-label="互动画册书架">
-        <div class="shelf" id="shelf" role="group" aria-label="十本互动摄影画册"></div>
-        <div class="shelf-base" aria-hidden="true"></div>
-      </section>
-
       <div class="earth-interface" aria-hidden="true">
         <p><span>EARTH / MEMORY COORDINATES</span><b id="locationReadout">AUTO ORBIT</b></p>
         <i></i>
       </div>
       <p class="journey-status" id="journeyStatus" role="status" aria-live="polite"></p>
+      <p class="orbit-hint" id="orbitHint">打开右上角的画册星环，寻找一段记忆</p>
+      <button class="location-entry" id="locationEntry" aria-hidden="true" disabled>
+        <b id="locationTitle">南昌</b><span id="locationSubtitle">中国 · 江西</span>
+        <small id="locationCoordinates"></small><i aria-hidden="true">↗</i>
+      </button>
       <aside class="destination-map" id="destinationMap" aria-hidden="true">
         <p class="map-eyebrow">DESTINATION / 01</p>
-        <h2>南昌<span>中国 · 江西</span></h2>
+        <h2><button id="mapEntry" aria-label="打开南昌画册">南昌<span>中国 · 江西 ↗</span></button></h2>
         <img id="regionMapImage" alt="江西省地图，南昌市区域高亮并标出南昌位置">
         <p class="map-coordinate">28.68° N &nbsp; 115.86° E</p>
       </aside>
@@ -45,13 +60,13 @@
 
   <section class="reader-layer" id="readerLayer" aria-hidden="true">
     <header>
-      <button id="closeReader" aria-label="返回世界书架">← 返回世界书架</button>
+      <button id="closeReader" aria-label="返回地球定位">← 返回地球定位</button>
       <p><span id="readerBookTitle">南昌</span><small id="readerBookIssue">NANCHANG</small></p>
       <span class="header-balance" aria-hidden="true"></span>
     </header>
     <iframe id="bookFrame" title="互动画册阅读器" loading="eager"></iframe>
   </section>
 
-  <script src="system.js?v=20261013d"></script>
+  <script src="system.js?v=20261013-orbit1"></script>
 </body>
 </html>

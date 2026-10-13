@@ -4,6 +4,10 @@
 
 ## 3D 地球贴图
 
+- 当前 4K 贴图 `assets/earth-blue-marble-4k.jpg` 由 NASA SVS 的 8192 × 4096 原图缩小到 4096 × 2048，以兼顾细节与加载速度。原图：https://svs.gsfc.nasa.gov/vis/a000000/a003600/a003615/flat_earth_Largest_still.0330.jpg
+- 星空、银河尘埃、辉光及投影光束由代码绘制。画册轨道为两层空间圆环，悬停时停止旋转。
+- 十本画册的投影照片 `assets/orbit/` 从原画册已有照片生成。南昌使用用户原始南昌站旅行照片，未新增个人资料来源。
+
 - 当前贴图 `assets/earth-blue-marble-2k.jpg`：NASA/Goddard Space Flight Center Scientific Visualization Studio，Equirectangular Projected Earth for LARGEST，2048 × 1024。https://svs.gsfc.nasa.gov/3615/
 - 江西地图行政区域：阿里云 DataV 地理边界服务，江西省各地级市边界。https://geo.datav.aliyun.com/areas_v3/bound/360000_full.json 。南昌定位为 28.68° N，115.86° E。
 - 高清贴图与区域地图直接嵌入 `system.js`；通过 WebGL 球体网格实时旋转、缩放，并以同一地理坐标变换投影地点标记。
