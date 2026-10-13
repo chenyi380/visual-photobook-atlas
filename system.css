@@ -232,8 +232,10 @@ body[data-renderer="software-sphere"] .planet-art>img {opacity:1;}
 .orbital-title small {font:400 clamp(9px,.72vw,16px)/1.2 Georgia,'Times New Roman',serif;letter-spacing:.025em;color:#dce9ff;opacity:1;}
 .orbital-book.active .holographic-book {transform:scale(1);border:2px solid #d4f3ff;box-shadow:0 0 5px #b1e8ff,0 0 21px #4d9fff,inset 0 0 32px #4b83cc80;background:linear-gradient(115deg,#325888d9,#0b2347e6);}
 .orbital-book.active .orbital-title b {font-size:clamp(22px,1.6vw,36px);}
-.orbital-book.active .orbital-title small {font-size:clamp(11px,.9vw,20px);}
-.orbital-book[data-book="nanchang"] .orbital-cover img {transform:scale(1.075);object-position:40% 43%;}
+.orbital-book.active .orbital-title small {font-size:clamp(9px,.72vw,16px);}
+.orbital-book.active[data-book="nanchang"] .orbital-title small {font-size:clamp(11px,.9vw,20px);}
+.orbital-book.active[data-book="naoshima"] .orbital-title b {font-size:clamp(18px,1.25vw,28px);letter-spacing:.035em;}
+.orbital-book[data-book="nanchang"] .orbital-cover img {height:124%;transform:scale(1.07);transform-origin:50% 0%;object-position:40% top;}
 .memory-projection {background:#101e36;border:1.3px solid #9ecaff;border-radius:10px;box-shadow:0 0 4px #80c7ff,0 0 20px #387ced50;}
 .projection-image {background:#142744;}
 .projection-image img {opacity:1;filter:saturate(1.05) contrast(1.02);transform:scale(1);object-position:center;}
@@ -259,6 +261,8 @@ body[data-renderer="software-sphere"] .planet-art>img {opacity:1;}
   .orbital-title small{font-size:5px;letter-spacing:0;}
   .orbital-book.active .orbital-title b{font-size:12px;}
   .orbital-book.active .orbital-title small{font-size:5px;}
+  .orbital-book.active[data-book="nanchang"] .orbital-title small{font-size:5px;}
+  .orbital-book.active[data-book="naoshima"] .orbital-title b{font-size:11px;}
   .atlas-toggle{font-size:11px;top:18px;right:16px;padding:8px 15px;}
   .sky-credit{font-size:7px;left:10px;bottom:9px;}
   .orbit-hint{font-size:9px;bottom:28px;}
