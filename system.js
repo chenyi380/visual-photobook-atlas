@@ -202,7 +202,7 @@ class EarthMeshRenderer {
   }
 }
 
-// One accessible destination button has two visual forms: rock and glass book.
+// One accessible destination button has two visual forms: planet and glass book.
 class OrbitalLibrary {
   constructor(element, globe, books, callbacks) {
     this.element = element;
@@ -262,6 +262,8 @@ class OrbitalLibrary {
     if (this.opened === opened) return;
     const from = this.buttons.map((_, index) => this.pose(index));
     this.opened = opened;
+    // Each reveal starts in the reference composition, independent of planet phase.
+    if (opened) this.phase = 0;
     this.hovered = null;
     this.focused = null;
     this.active = null;
@@ -295,7 +297,7 @@ class OrbitalLibrary {
     const dx = Math.sin(angle) * radius;
     return { x: this.globe.centerX + dx,
       y: this.globe.restCenterY + dy, depth,
-      scale: .87 + (depth + 1) * .08, width: cardWidth, height: mobile ? 51 : cardWidth * .44,
+      scale: .87 + (depth + 1) * .08, width: cardWidth, height: mobile ? 51 : cardWidth * .40,
       turn: -Math.sin(angle) * 18, roll: -Math.sin(angle)*5 };
   }
   pose(index) { return this.opened ? this.bookPose(index) : this.planetPose(index); }
