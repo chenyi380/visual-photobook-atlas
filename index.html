@@ -11,8 +11,14 @@
 <body>
   <main class="atlas-shell" id="libraryView">
     <section class="library-hero" aria-labelledby="atlas-title">
+      <div class="cosmos-stage" aria-hidden="true">
+        <canvas id="spaceCanvas"></canvas>
+        <div class="orbit-ring orbit-ring-one"></div>
+        <div class="orbit-ring orbit-ring-two"></div>
+      </div>
+
       <div class="hero-copy">
-        <p class="eyebrow">CURATED WITH AI · BOUND BY MEMORY</p>
+        <p class="eyebrow">MEMORY ATLAS · ORBITING ARCHIVE</p>
         <h1 id="atlas-title"><span>把世界收进</span><em>一排书脊</em></h1>
       </div>
 
@@ -20,6 +26,12 @@
         <div class="shelf" id="shelf" role="group" aria-label="十本互动摄影画册"></div>
         <div class="shelf-base" aria-hidden="true"></div>
       </section>
+
+      <div class="earth-interface" aria-hidden="true">
+        <p><span>EARTH / MEMORY COORDINATES</span><b id="locationReadout">AUTO ORBIT</b></p>
+        <i></i>
+      </div>
+      <p class="journey-status" id="journeyStatus" role="status" aria-live="polite"></p>
     </section>
   </main>
 
