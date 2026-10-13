@@ -184,7 +184,7 @@ body.orbits-open .planet-art { opacity:0; }
 .holographic-book { padding:7px; gap:11px; border:1px solid #a5c9ffb8; border-radius:9px; background:linear-gradient(130deg,#759bf82b,#08142fa8 65%,#3166aa2b); box-shadow:inset 0 0 14px #9dcaff29,0 0 15px #81b2ff26; }
 .orbital-title b { font-family:Georgia,'Songti SC','STSong',serif; font-size:clamp(16px,1.20vw,21px); font-weight:400; }
 .orbital-title small { font:400 clamp(8px,.70vw,12px)/1.2 Georgia,'Times New Roman',serif; letter-spacing:.045em; }
-.orbital-book.active .holographic-book { border:1.5px solid #d6f3ff; box-shadow:0 0 7px #77c5ff,0 0 24px #63a4ffa6,inset 0 0 25px #3d91df66; background:linear-gradient(120deg,#4b91d885,#071a42d9); }
+.orbital-book.active .holographic-book { transform:translate(var(--feature-x,0px),var(--feature-y,0px)); border:1.5px solid #d6f3ff; box-shadow:0 0 7px #77c5ff,0 0 24px #63a4ffa6,inset 0 0 25px #3d91df66; background:linear-gradient(120deg,#4b91d885,#071a42d9); }
 .orbit-guides { stroke:#80aaffc7; stroke-width:1.15; filter:drop-shadow(0 0 4px #568cff99); }
 .memory-projection { width:500px; height:289px; border:1px solid #94c1ffb3; border-radius:8px; background:#acc3cd; box-shadow:0 0 5px #579bff8c,0 0 25px #549af633; }
 .projection-image { background:#a7c4d1; }
