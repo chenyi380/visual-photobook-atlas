@@ -17,7 +17,7 @@ button:focus-visible { outline:1px solid #dcefff; outline-offset:5px; }
 .eyebrow { margin:0 0 20px; color:#d79479; font:600 10px/1 var(--sans); letter-spacing:.32em; }
 .hero-copy h1 { display:flex; align-items:baseline; justify-content:center; gap:.2em; margin:0; white-space:nowrap; font:400 clamp(38px,4.7vw,70px)/1.08 var(--serif); letter-spacing:-.055em; text-shadow:0 3px 24px #000; }
 .hero-copy h1 em { color:var(--red); font-style:normal; }
-body.orbits-open .hero-copy { opacity:.28; transform:translateY(-25px) scale(.88); }
+body.orbits-open .hero-copy { opacity:0; transform:translateY(-25px) scale(.88); }
 body.journey-active .hero-copy,body.destination-arrived .hero-copy { opacity:0; transform:translateY(-30px); }
 .atlas-toggle { position:fixed; z-index:14; top:30px; right:36px; display:flex; gap:10px; align-items:center; padding:10px 16px 10px 11px; border:1px solid rgb(183 218 238 / 28%); border-radius:28px; background:rgb(7 17 29 / 46%); backdrop-filter:blur(18px); box-shadow:0 4px 25px rgb(0 0 0 / 20%); font:500 11px/1 var(--sans); letter-spacing:.12em; transition:background .3s,border-color .3s; }
 .atlas-toggle:hover,.atlas-toggle[aria-expanded="true"] { background:rgb(28 59 78 / 60%); border-color:rgb(156 215 245 / 64%); }
@@ -95,7 +95,7 @@ body.journey-active .orbit-hint,body.destination-arrived .orbit-hint { opacity:0
   .hero-copy { top:16%; }
   .eyebrow { font-size:7px; margin-bottom:16px; letter-spacing:.24em; }
   .hero-copy h1 { font-size:clamp(29px,8.3vw,40px); gap:.1em; }
-  body.orbits-open .hero-copy { opacity:.12; }
+  body.orbits-open .hero-copy { opacity:0; }
   .orbital-title { padding:5px 4px 5px 8px; gap:4px; }
   .orbital-title b { font-size:10px; letter-spacing:0; }
   .type-kai .orbital-title b { font-size:11px; }

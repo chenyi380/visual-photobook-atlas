@@ -122,10 +122,19 @@ class EarthMeshRenderer {
 
   setTexture(image) {
     const gl = this.gl;
+    let upload = image;
+    const limit = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    if (image.width > limit) {
+      upload = document.createElement("canvas");
+      upload.width = limit;
+      upload.height = Math.round(image.height / image.width * limit);
+      upload.getContext("2d").drawImage(image, 0, 0, upload.width, upload.height);
+    }
     gl.bindTexture(gl.TEXTURE_2D, this.texture);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    if ((image.width & (image.width - 1)) === 0 && (image.height & (image.height - 1)) === 0) {
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, upload);
+    if (gl.getError() !== gl.NO_ERROR) throw new Error("GPU texture upload failed");
+    if ((upload.width & (upload.width - 1)) === 0 && (upload.height & (upload.height - 1)) === 0) {
       gl.generateMipmap(gl.TEXTURE_2D);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     }
@@ -255,9 +264,10 @@ class OrbitalLibrary {
       const button = this.buttons[index], pose = this.pose(index);
       button.style.setProperty("--book-width", `${pose.width}px`);
       button.style.setProperty("--book-height", `${pose.height}px`);
-      button.style.transform = `translate3d(${(pose.x - pose.width / 2).toFixed(1)}px, ${(pose.y - pose.height / 2).toFixed(1)}px, 0) perspective(900px) rotateY(${pose.turn.toFixed(1)}deg) rotateZ(-4deg) scale(${pose.scale.toFixed(3)})`;
-      button.style.zIndex = pose.depth >= 0 ? "6" : "1";
-      button.style.opacity = String(pose.depth >= 0 ? .98 : .52);
+      const selected = this.active === index;
+      button.style.transform = `translate3d(${(pose.x - pose.width / 2).toFixed(1)}px, ${(pose.y - pose.height / 2).toFixed(1)}px, 0) perspective(900px) rotateY(${pose.turn.toFixed(1)}deg) rotateZ(-4deg) scale(${(pose.scale + (selected ? .08 : 0)).toFixed(3)})`;
+      button.style.zIndex = selected ? "8" : pose.depth >= 0 ? "6" : "1";
+      button.style.opacity = String(selected || pose.depth >= 0 ? .98 : .52);
     }
     for (const [index, id] of [[0, "orbitGuideOne"], [5, "orbitGuideTwo"]]) {
       const radius = Math.min(this.globe.baseRadius * (index ? 1.97 : 1.64), this.globe.width * (index ? .43 : .37));
@@ -822,6 +832,11 @@ class StarGlobe {
   }
 
   render(time) {
+    if (document.body.classList.contains("reading")) {
+      this.lastTime = time;
+      requestAnimationFrame(this.render);
+      return;
+    }
     this.update(time);
     this.effectsContext.clearRect(0, 0, this.width, this.height);
     this.drawSpace(time);
