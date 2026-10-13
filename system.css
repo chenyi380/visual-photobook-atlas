@@ -231,9 +231,13 @@ body[data-renderer="software-sphere"] .planet-art>img {opacity:1;}
 .orbital-title b {font:400 clamp(17px,1.23vw,26px)/1.15 'SimSun','Songti SC','STSong',serif;letter-spacing:.08em;}
 .orbital-title small {font:400 clamp(9px,.72vw,16px)/1.2 Georgia,'Times New Roman',serif;letter-spacing:.025em;color:#dce9ff;opacity:1;}
 .orbital-book.active .holographic-book {transform:scale(1);border:2px solid #d4f3ff;box-shadow:0 0 5px #b1e8ff,0 0 21px #4d9fff,inset 0 0 32px #4b83cc80;background:linear-gradient(115deg,#325888d9,#0b2347e6);}
+.orbital-book.active .orbital-title b {font-size:clamp(22px,1.6vw,36px);}
+.orbital-book.active .orbital-title small {font-size:clamp(11px,.9vw,20px);}
+.orbital-book[data-book="nanchang"] .orbital-cover img {transform:scale(1.075);object-position:40% 43%;}
 .memory-projection {background:#101e36;border:1.3px solid #9ecaff;border-radius:10px;box-shadow:0 0 4px #80c7ff,0 0 20px #387ced50;}
 .projection-image {background:#142744;}
 .projection-image img {opacity:1;filter:saturate(1.05) contrast(1.02);transform:scale(1);object-position:center;}
+.memory-projection[data-book="nanchang"] .projection-image img {transform:scale(1.075);object-position:center 55%;}
 .projection-image::before {display:none;}
 .projection-image::after {background:linear-gradient(90deg,#07152bef,#0a1734b8 27%,#16365216 62%,transparent),linear-gradient(180deg,#15245112,#04102c26);}
 .projection-map {inset:3% auto auto 35%;width:31%;height:94%;object-fit:contain;opacity:1;filter:drop-shadow(0 0 3px #60adff) drop-shadow(0 0 8px #327aff);}
@@ -253,6 +257,8 @@ body[data-renderer="software-sphere"] .planet-art>img {opacity:1;}
   .orbital-title{gap:4px;}
   .orbital-title b{font-size:11px;letter-spacing:.015em;}
   .orbital-title small{font-size:5px;letter-spacing:0;}
+  .orbital-book.active .orbital-title b{font-size:12px;}
+  .orbital-book.active .orbital-title small{font-size:5px;}
   .atlas-toggle{font-size:11px;top:18px;right:16px;padding:8px 15px;}
   .sky-credit{font-size:7px;left:10px;bottom:9px;}
   .orbit-hint{font-size:9px;bottom:28px;}
