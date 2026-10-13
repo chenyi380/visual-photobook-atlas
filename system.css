@@ -134,14 +134,14 @@ body.journey-active .orbit-hint,body.destination-arrived .orbit-hint { opacity:0
 .holographic-book { position:absolute; inset:0; display:flex; align-items:center; gap:9px; padding:7px; border:1px solid rgb(170 207 255 / 66%); border-radius:10px; background:linear-gradient(130deg,rgb(91 117 183 / 24%),rgb(7 18 39 / 66%) 55%,rgb(64 91 163 / 20%)); box-shadow:inset 0 0 13px rgb(155 190 255 / 14%),0 0 13px rgb(98 149 238 / 17%); backdrop-filter:blur(8px); opacity:0; transform:scale(.3); transition:opacity .8s,transform .8s,border-color .3s,box-shadow .3s; overflow:hidden; }
 body.orbits-open .asteroid-art { opacity:0; }
 body.orbits-open .holographic-book { opacity:1; transform:scale(1); }
-.orbital-cover { width:52px; height:100%; flex:none; border:0; border-radius:5px; }
+.orbital-cover { width:36%; height:100%; flex:none; border:0; border-radius:5px; }
 .orbital-cover img { filter:saturate(.83); }
 .orbital-title { height:100%; padding:0; flex:1; gap:7px; justify-content:center; }
-.orbital-title b { font-size:16px; letter-spacing:.04em; }
+.orbital-title b { font-size:clamp(16px,1.15vw,20px); letter-spacing:.04em; }
 .orbital-title small { font:400 7px/1.25 Georgia,serif; letter-spacing:.09em; color:#b5cbe2; }
-.type-kai .orbital-title b { font-size:17px; }
-.type-sans .orbital-title b { font-size:14px; }
-.type-bold .orbital-title b,.type-hei .orbital-title b { font-size:14px; }
+.type-kai .orbital-title b { font-size:clamp(17px,1.2vw,21px); }
+.type-sans .orbital-title b { font-size:clamp(14px,1.03vw,18px); }
+.type-bold .orbital-title b,.type-hei .orbital-title b { font-size:clamp(14px,1.03vw,18px); }
 .orbital-book.active { filter:none; box-shadow:none; }
 .orbital-book.active .holographic-book { border-color:#d2ecff; box-shadow:0 0 18px rgb(104 192 255 / 60%),inset 0 0 18px rgb(116 201 255 / 22%); background:linear-gradient(120deg,rgb(80 144 216 / 44%),rgb(6 22 45 / 82%)); }
 .orbit-guides { stroke:rgb(132 180 248 / 46%); stroke-width:.7; filter:drop-shadow(0 0 3px rgb(110 160 255 / 25%)); }

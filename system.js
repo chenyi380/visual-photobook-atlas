@@ -285,14 +285,16 @@ class OrbitalLibrary {
   bookPose(index) {
     const layer = index < 5 ? 0 : 1;
     const mobile = this.globe.width < 720;
+    const cardWidth = mobile ? 90 : clamp(this.globe.width * .115, 146, 210);
+    const unit = mobile ? 1 : cardWidth / 146;
     const radius = Math.min(this.globe.baseRadius * 2.40, this.globe.width * (mobile ? .34 : .38));
     const angle = this.phase + index % 5 / 5 * Math.PI * 2 + (layer ? Math.PI / 5 : 0);
     const depth = Math.cos(angle);
-    const dy = depth * (mobile ? 65 : 75) + (layer ? (mobile ? 98 : 120) : (mobile ? -98 : -120));
+    const dy = depth * (mobile ? 65 : 75 * unit) + (layer ? (mobile ? 98 : 120 * unit) : (mobile ? -98 : -120 * unit));
     const dx = Math.sin(angle) * radius;
     return { x: this.globe.centerX + dx,
       y: this.globe.restCenterY + dy, depth,
-      scale: .85 + (depth + 1) * .09, width: mobile ? 90 : 146, height: mobile ? 51 : 68,
+      scale: .85 + (depth + 1) * .09, width: cardWidth, height: mobile ? 51 : 68 * unit,
       turn: -Math.sin(angle) * 23, roll: -3 };
   }
   pose(index) { return this.opened ? this.bookPose(index) : this.asteroidPose(index); }
@@ -323,13 +325,14 @@ class OrbitalLibrary {
     for (const [index, id] of [[0, 'orbitGuideOne'], [5, 'orbitGuideTwo']]) {
       const layer = index > 0;
       const mobile = this.globe.width < 720;
+      const unit = mobile ? 1 : clamp(this.globe.width * .115, 146, 210) / 146;
       const radius = Math.min(this.globe.baseRadius * 2.40, this.globe.width * (mobile ? .34 : .38));
       const ellipse = document.querySelector(`#${id}`);
       if (!ellipse) continue;
       ellipse.setAttribute('cx', this.globe.centerX);
-      ellipse.setAttribute('cy', this.globe.restCenterY + (layer ? (mobile ? 98 : 120) : (mobile ? -98 : -120)));
+      ellipse.setAttribute('cy', this.globe.restCenterY + (layer ? (mobile ? 98 : 120 * unit) : (mobile ? -98 : -120 * unit)));
       ellipse.setAttribute('rx', radius);
-      ellipse.setAttribute('ry', mobile ? 65 : 75);
+      ellipse.setAttribute('ry', mobile ? 65 : 75 * unit);
       ellipse.removeAttribute?.('transform');
     }
   }
@@ -484,7 +487,7 @@ class StarGlobe {
     this.centerY = this.restCenterY;
     this.baseRadius = this.width < 720
       ? Math.min(this.width * .27, this.height * .21, 260)
-      : Math.min(this.width * .23, this.height * .23, 470);
+      : Math.min(this.width * .23, this.height * .28, 470);
     this.makeNebula();
     this.makeStars();
     this.prepareSphereGrid();
