@@ -6,13 +6,14 @@
   <meta name="description" content="在旋转地球与星空之间，探索十本旅行画册与它们的记忆坐标。">
   <title>世界视觉档案 · AI 画册系统</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23f4ead3'/%3E%3Ccircle cx='32' cy='32' r='22' fill='%2335556b'/%3E%3Cpath d='M10 33c9-8 18-4 25-13 4 7 11 10 19 9v12c-9-3-16-1-22 7-5-8-13-8-22-4z' fill='%23ad563f'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="system.css?v=20261013-reference4">
+  <link rel="stylesheet" href="system.css?v=20261013-physical1">
 </head>
 <body>
   <main class="atlas-shell" id="libraryView">
     <section class="library-hero" aria-labelledby="atlas-title">
       <div class="cosmos-stage">
         <canvas id="spaceCanvas" aria-hidden="true"></canvas>
+        <canvas id="skyCanvas" aria-hidden="true"></canvas>
         <canvas id="orbitCanvas" aria-hidden="true"></canvas>
         <canvas id="earthCanvas" aria-hidden="true"></canvas>
         <canvas id="effectsCanvas" aria-hidden="true"></canvas>
@@ -46,6 +47,7 @@
       </div>
       <p class="journey-status" id="journeyStatus" role="status" aria-live="polite"></p>
       <p class="orbit-hint" id="orbitHint">点击任意小星球，展开旅行画册</p>
+      <a class="sky-credit" href="https://www.eso.org/public/images/eso0932a/" target="_blank" rel="noopener">ESO/S. Brunier · 真实星空全景</a>
     </section>
   </main>
 
@@ -58,6 +60,6 @@
     <iframe id="bookFrame" title="互动画册阅读器" loading="eager"></iframe>
   </section>
 
-  <script src="system.js?v=20261013-reference4"></script>
+  <script src="system.js?v=20261013-physical1"></script>
 </body>
 </html>

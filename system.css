@@ -215,3 +215,45 @@ body:not(.orbits-open) .orbit-hint { bottom:18px; }
   .orbit-hint { font-size:9px; bottom:25px; }
 }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { transition-duration:.001ms !important; } }
+/* Reference 1 is the composition lock; the star background is real photography. */
+#skyCanvas {position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;pointer-events:none;}
+.orbit-guides {display:none;}
+.orbital-book::before,.orbital-book::after {display:none;}
+.orbital-book {transition:opacity .35s;}
+body:not(.orbits-open) .planet-art>img {opacity:0;}
+body[data-renderer="software-sphere"] .planet-art>img {opacity:1;}
+.planet-art {filter:none !important;}
+.planet-art>span {top:calc(100% + 4px);color:#edf3ff;font-size:12px;text-shadow:0 1px 8px #000;}
+.holographic-book {padding:8px;gap:13px;border:1.2px solid #9cbcf5;border-radius:10px;background:linear-gradient(115deg,#192b51c9,#091426d4 75%);box-shadow:inset 0 0 18px #8fb7ff26,0 0 12px #649ff830;backdrop-filter:blur(3px);transition:opacity .8s,transform .8s,border-color .25s,box-shadow .25s;}
+.orbital-cover {width:53%;border-radius:5px;height:100%;}
+.orbital-cover img {filter:saturate(1.05) contrast(1.03);}
+.orbital-title {gap:9px;overflow:visible;}
+.orbital-title b {font:400 clamp(17px,1.23vw,26px)/1.15 'SimSun','Songti SC','STSong',serif;letter-spacing:.08em;}
+.orbital-title small {font:400 clamp(9px,.72vw,16px)/1.2 Georgia,'Times New Roman',serif;letter-spacing:.025em;color:#dce9ff;opacity:1;}
+.orbital-book.active .holographic-book {transform:scale(1);border:2px solid #d4f3ff;box-shadow:0 0 5px #b1e8ff,0 0 21px #4d9fff,inset 0 0 32px #4b83cc80;background:linear-gradient(115deg,#325888d9,#0b2347e6);}
+.memory-projection {background:#101e36;border:1.3px solid #9ecaff;border-radius:10px;box-shadow:0 0 4px #80c7ff,0 0 20px #387ced50;}
+.projection-image {background:#142744;}
+.projection-image img {opacity:1;filter:saturate(1.05) contrast(1.02);transform:scale(1);object-position:center;}
+.projection-image::before {display:none;}
+.projection-image::after {background:linear-gradient(90deg,#07152bef,#0a1734b8 27%,#16365216 62%,transparent),linear-gradient(180deg,#15245112,#04102c26);}
+.projection-map {inset:3% auto auto 35%;width:31%;height:94%;object-fit:contain;opacity:1;filter:drop-shadow(0 0 3px #60adff) drop-shadow(0 0 8px #327aff);}
+.memory-projection figcaption {left:5.8%;top:17%;max-width:29%;color:#e8f2ff;}
+.memory-projection figcaption span {font:400 calc(30px * var(--projection-unit,1))/1.2 'SimSun','Songti SC',serif;letter-spacing:.12em;white-space:nowrap;}
+.memory-projection figcaption small {font:400 calc(16px * var(--projection-unit,1))/1.4 Georgia,'Times New Roman',serif;letter-spacing:.07em;color:#e2efff;margin-top:7px;white-space:nowrap;}
+#projectionLandmarks {display:none;}
+#projectionCoordinates {display:block;font-size:calc(14px * var(--projection-unit,1));letter-spacing:.035em;margin-top:7px;}
+.projection-beam {filter:none;}
+.atlas-toggle {font:400 14px/1.2 'SimSun',serif;top:3.8vh;right:2.4vw;padding:9px 26px;background:#03112666;border-color:#76a8e4;}
+.sky-credit {position:fixed;z-index:11;left:18px;bottom:14px;color:#aab8c9;font:400 10px/1.3 Georgia,serif;text-decoration:none;letter-spacing:.035em;}
+.sky-credit:hover {color:#fff;text-decoration:underline;}
+.orbit-hint {font:400 14px/1.4 'SimSun',serif;bottom:4.8vh;}
+@media(max-width:720px){
+  .holographic-book{padding:4px;gap:5px;border-radius:6px;}
+  .orbital-cover{width:46%;border-radius:3px;}
+  .orbital-title{gap:4px;}
+  .orbital-title b{font-size:11px;letter-spacing:.015em;}
+  .orbital-title small{font-size:5px;letter-spacing:0;}
+  .atlas-toggle{font-size:11px;top:18px;right:16px;padding:8px 15px;}
+  .sky-credit{font-size:7px;left:10px;bottom:9px;}
+  .orbit-hint{font-size:9px;bottom:28px;}
+}

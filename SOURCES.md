@@ -1,5 +1,11 @@
 # 世界视觉档案：图片与参考来源
 
+## 当前真实星空与轨道模型
+
+- 背景原图：[The Milky Way panorama](https://www.eso.org/public/images/eso0932a/)，ESO/S. Brunier，6000×3000真实全天实拍拼接；下载地址 https://cdn.eso.org/images/large/eso0932a.jpg ，本地 `assets/eso-milkyway-6k.jpg`。遵循 [ESO CC BY 4.0 使用条款](https://www.eso.org/public/outreach/copyright/)，网页保留清晰、可点击署名。只做天球投影、观察方向旋转，没有AI修改。
+- [Spacekit](https://github.com/typpo/spacekit)、[Stellarium Web Engine](https://github.com/Stellarium/stellarium-web-engine)、[Three.js CSS3DRenderer](https://threejs.org/docs/pages/CSS3DRenderer.html) 为功能和架构研究参考，未复制代码、未新增运行时依赖。
+- 导航小星球为实时三维网格设计符号；轨道遵循设计参数下的二体开普勒模型。轨道辅助线、时间加速和尺寸比例均为交互示意，不是实测天体。旧版AI银河及球体图保留在目录中，但不再用于当前WebGL场景。
+
 南昌画册使用用户提供的 79 张旅行影像；其余三本主题画册使用 Unsplash 的高分辨率影像。此文件保留每张素材的原始页面，便于复核作者与许可信息。
 
 ## 3D 地球贴图
