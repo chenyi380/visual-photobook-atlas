@@ -123,4 +123,50 @@ body.journey-active .orbit-hint,body.destination-arrived .orbit-hint { opacity:0
   .reader-layer>header { padding:0 12px; }
   .header-balance { min-width:70px; }
 }
+/* SpaceEngine-inspired night scene: glass surfaces remain real HTML controls. */
+.orbital-book { visibility:visible; pointer-events:auto; background:none; color:#e6f1ff; box-shadow:none; border-radius:12px; transition:opacity .45s,filter .25s; }
+.orbital-book::before,.orbital-book::after { display:none; }
+.asteroid-art { position:absolute; inset:0; opacity:1; transition:opacity .8s,filter .3s; }
+.asteroid-art>img { display:block; width:100%; height:100%; object-fit:contain; transform:rotate(var(--rock-turn)); filter:drop-shadow(0 2px 9px #000); }
+.asteroid-art>span { position:absolute; left:50%; top:100%; transform:translateX(-50%); padding:4px 7px; color:#d5eaff; font:400 12px/1.3 var(--serif); white-space:nowrap; opacity:0; transition:opacity .3s; }
+.orbital-book:hover .asteroid-art>span,.orbital-book:focus-visible .asteroid-art>span { opacity:1; }
+.orbital-book:hover .asteroid-art { filter:drop-shadow(0 0 9px #80c4f77a) brightness(1.22); }
+.holographic-book { position:absolute; inset:0; display:flex; align-items:center; gap:9px; padding:7px; border:1px solid rgb(170 207 255 / 66%); border-radius:10px; background:linear-gradient(130deg,rgb(91 117 183 / 24%),rgb(7 18 39 / 66%) 55%,rgb(64 91 163 / 20%)); box-shadow:inset 0 0 13px rgb(155 190 255 / 14%),0 0 13px rgb(98 149 238 / 17%); backdrop-filter:blur(8px); opacity:0; transform:scale(.3); transition:opacity .8s,transform .8s,border-color .3s,box-shadow .3s; overflow:hidden; }
+body.orbits-open .asteroid-art { opacity:0; }
+body.orbits-open .holographic-book { opacity:1; transform:scale(1); }
+.orbital-cover { width:52px; height:100%; flex:none; border:0; border-radius:5px; }
+.orbital-cover img { filter:saturate(.83); }
+.orbital-title { height:100%; padding:0; flex:1; gap:7px; justify-content:center; }
+.orbital-title b { font-size:16px; letter-spacing:.04em; }
+.orbital-title small { font:400 7px/1.25 Georgia,serif; letter-spacing:.09em; color:#b5cbe2; }
+.type-kai .orbital-title b { font-size:17px; }
+.type-sans .orbital-title b { font-size:14px; }
+.type-bold .orbital-title b,.type-hei .orbital-title b { font-size:14px; }
+.orbital-book.active { filter:none; box-shadow:none; }
+.orbital-book.active .holographic-book { border-color:#d2ecff; box-shadow:0 0 18px rgb(104 192 255 / 60%),inset 0 0 18px rgb(116 201 255 / 22%); background:linear-gradient(120deg,rgb(80 144 216 / 44%),rgb(6 22 45 / 82%)); }
+.orbit-guides { stroke:rgb(132 180 248 / 46%); stroke-width:.7; filter:drop-shadow(0 0 3px rgb(110 160 255 / 25%)); }
+.memory-projection { width:362px; height:204px; border:1px solid rgb(151 203 255 / 65%); border-radius:9px; overflow:hidden; transform:translateY(15px) scale(.94); box-shadow:0 0 30px rgb(79 159 252 / 21%),0 15px 30px #0008; }
+.memory-projection.visible { transform:translateY(0) scale(1); }
+.projection-image { position:absolute; inset:0; height:100%; background:#0c1826; }
+.projection-image img { opacity:.9; filter:blur(.4px) saturate(.70); transform:scale(1.03); }
+.projection-image::after { background:linear-gradient(90deg,rgb(5 19 35 / 89%),rgb(15 31 52 / 37%) 42%,rgb(14 37 55 / 3%) 80%),linear-gradient(180deg,rgb(37 79 106 / 26%),transparent 60%,rgb(3 14 29 / 47%)); }
+.projection-map { position:absolute; height:166px; width:166px; right:12px; top:5px; object-fit:contain; opacity:.85; filter:drop-shadow(0 0 7px #78bffe); }
+.memory-projection figcaption { position:absolute; left:18px; top:26px; display:flex; flex-direction:column; align-items:flex-start; gap:12px; padding:0; max-width:165px; text-shadow:0 2px 12px #000; }
+.memory-projection figcaption span { font:400 26px/1.1 var(--serif); letter-spacing:.12em; }
+.memory-projection figcaption small { font:400 8px/1.5 var(--sans); color:#c2def0; text-align:left; letter-spacing:.1em; max-width:150px; }
+.projection-beam { z-index:5; }
+.earth-interface { color:#b5c9de6b; }
+@media(max-width:720px) {
+  .holographic-book { padding:5px; gap:5px; border-radius:7px; }
+  .orbital-cover { width:29px; border-radius:3px; }
+  .orbital-title { gap:4px; padding:0; }
+  .orbital-title b,.type-kai .orbital-title b { font-size:12px; }
+  .type-sans .orbital-title b,.type-hei .orbital-title b,.type-bold .orbital-title b { font-size:11px; }
+  .orbital-title small { font-size:5px; letter-spacing:0; }
+  .memory-projection { width:252px; height:172px; }
+  .projection-map { right:1px; top:13px; height:135px; width:135px; }
+  .memory-projection figcaption { left:12px; top:21px; gap:10px; max-width:115px; }
+  .memory-projection figcaption span { font-size:23px; }
+  .memory-projection figcaption small { max-width:106px; font-size:6px; }
+}
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { transition-duration:.001ms !important; } }

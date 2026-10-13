@@ -4,6 +4,11 @@
 
 ## 3D 地球贴图
 
+- 夜间灯光：NASA Earth Observatory / Black Marble 2016，官方页面 https://science.nasa.gov/earth/earth-observatory/earth-at-night/maps/ 。原始 13500 × 6750 彩色全球图：https://assets.science.nasa.gov/content/dam/science/esd/eo/images/imagerecords/144000/144898/BlackMarble_2016_3km.jpg 。网页使用 4096 × 2048 本地副本，按真实经纬度叠加到 WebGL 球面上。夜间地图是卫星数据合成，不是实时城市灯光。
+- 夜景表现参考用户提供的 SpaceEngine 截图；未复制截图、水印或 SpaceEngine 软件资源。光照、夜面灯光发射、云层和薄层大气辉光由项目独立渲染。
+- 全部画册投影地图使用真实坐标。南昌使用江西地级市边界；冰岛、日本、摩洛哥使用 Natural Earth 1:50m 国家边界（公开领域）：https://www.naturalearthdata.com/about/terms-of-use/ 。这些是旅行定位示意，不用于导航。
+- 小行星美术 `assets/asteroid.png`：用内置图像生成工具生成的透明岩石素材，轨道倾角、节点、深度排序、变形与选择行为均由代码计算。并非真实小行星观测资料。
+
 - 当前 4K 贴图 `assets/earth-blue-marble-4k.jpg` 由 NASA SVS 的 8192 × 4096 原图缩小到 4096 × 2048，以兼顾细节与加载速度。原图：https://svs.gsfc.nasa.gov/vis/a000000/a003600/a003615/flat_earth_Largest_still.0330.jpg
 - 星空、银河尘埃、辉光及投影光束由代码绘制。画册轨道为两层空间圆环，悬停时停止旋转。
 - 十本画册的投影照片 `assets/orbit/` 从原画册已有照片生成。南昌使用用户原始南昌站旅行照片，未新增个人资料来源。
