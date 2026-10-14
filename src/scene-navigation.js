@@ -10,8 +10,9 @@ class SceneNavigationController {
     globe.sceneController=this;library.navigation=this;
     addEventListener('wheel',event=>{
       if(event.ctrlKey||event.metaKey||this.blocked()||event.target.closest('dialog,a'))return;
-      event.preventDefault();
       const pixels=event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?innerHeight:1);
+      if(Math.abs(pixels)<.5)return;
+      event.preventDefault();
       this.target=clamp(this.target-pixels/850,0,1);
       library.hovered=library.focused=null;library.previewHeld=false;
       if(document.activeElement?.classList.contains('orbital-book'))document.activeElement.blur();

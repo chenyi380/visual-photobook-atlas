@@ -258,6 +258,7 @@ test('wheel reveal starts with uniform scene magnification and reverses continuo
   context.document.body.classList.toggle=()=>{};
   const nav=new context.sceneTools.SceneNavigationController(globe,library,()=>{},()=>false);
   let prevented=false;
+  library.hovered=2;context.wheelCallback({deltaY:0,deltaMode:0,target:{closest:()=>false}});assert.equal(library.hovered,2,'zero wheel event must not clear a real hover');
   context.wheelCallback({deltaY:-120,deltaMode:0,target:{closest:()=>false},preventDefault(){prevented=true;}});
   assert.ok(prevented);nav.update(80);assert.ok(nav.progress>0&&nav.progress<1);
   const radius=globe.baseRadius,unit=globe.planetUnit;assert.ok(Math.abs(radius/200-unit/160)<1e-12);

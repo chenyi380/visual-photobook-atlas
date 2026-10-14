@@ -320,6 +320,9 @@ body[data-renderer="software-sphere"] .planet-art>img {opacity:1;}
 .holographic-book{opacity:var(--book-opacity,0)!important;}
 .planet-art{opacity:var(--planet-opacity,1)!important;}
 .orbital-book{transition:none;}
+.tile-face{padding:calc(var(--book-width) * .035);gap:calc(var(--book-width) * .035);}
+.tile-face .orbital-cover{width:47%;flex-shrink:0;}
+.tile-face .orbital-title{min-width:0;}
 .orbital-book.active .orbital-title b{font-size:clamp(17px,1.23vw,26px);}
 .orbital-book.active .orbital-title small,.orbital-book.active[data-book="nanchang"] .orbital-title small{font-size:clamp(9px,.72vw,16px);}
 .projection-map{inset:0;width:100%;height:100%;object-fit:fill;opacity:1;filter:none;}
