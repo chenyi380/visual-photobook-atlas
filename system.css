@@ -262,7 +262,7 @@ body[data-renderer="software-sphere"] .planet-art>img {opacity:1;}
   .orbital-book.active .orbital-title b{font-size:12px;}
   .orbital-book.active .orbital-title small{font-size:5px;}
   .orbital-book.active[data-book="nanchang"] .orbital-title small{font-size:5px;}
-  .orbital-book.active[data-book="naoshima"] .orbital-title b{font-size:11px;}
+  .orbital-book[data-book="naoshima"] .orbital-title b,.orbital-book.active[data-book="naoshima"] .orbital-title b{font-size:9px;letter-spacing:0;}
   .atlas-toggle{font-size:11px;top:18px;right:16px;padding:8px 15px;}
   .sky-credit{font-size:7px;left:10px;bottom:9px;}
   .orbit-hint{font-size:9px;bottom:28px;}
