@@ -1111,8 +1111,8 @@ class SceneNavigationController {
 // Actual tilted circles viewed through one perspective camera, not screen ellipses.
 function bookOrbitPoint(index,angle,globe) {
   const mobile=globe.width<720,inner=index===0;
-  const radius=globe.width*(mobile?(inner?.205:.282):(inner?.275:.405));
-  const tilt=(inner?10:mobile?42:18)*Math.PI/180,camera=globe.width*3;
+  const radius=globe.width*(mobile?(inner?.205:.34):(inner?.275:.405));
+  const tilt=(inner?10:mobile?55:18)*Math.PI/180,camera=globe.width*3;
   const z=radius*Math.cos(angle)*Math.cos(tilt),perspective=camera/(camera-z);
   const zoom=globe.sceneZoom??1;
   return {x:globe.centerX+Math.sin(angle)*radius*perspective*zoom,
@@ -1148,6 +1148,7 @@ class BookJourneyController {
     this.active={book,locationBook,start:performance.now(),origin:{x:r.x+r.width/2,y:r.y+r.height/2},button};
     this.library.busy=this.library.previewHeld=true;clearTimeout(this.library.releaseTimer);
     document.body.classList.add('journey-active');document.body.dataset.journey='flight';
+    this.canvas.dataset.progress='0';
     document.querySelector('#journeyStatus').textContent=`正在穿越至${book.title}，按 Esc 可返回`;
     document.querySelector('#libraryView').setAttribute('aria-busy','true');
     this.card=document.createElement('div');this.card.className='journey-card';this.card.setAttribute('aria-hidden','true');
@@ -1260,6 +1261,7 @@ document.querySelector('#openTravelPhoto').addEventListener('click',()=>{
   clone.style.left=clone.style.top='0';clone.setAttribute('aria-hidden','false');
   const ratio=ATLAS_TRAVEL_PHOTOS[previewBook.id].ratio,width=Math.min(innerWidth*.85,(innerHeight-100)*ratio,1200);
   clone.style.width=`${width}px`;clone.style.height=`${width/ratio}px`;clone.style.setProperty('--projection-unit',String(width/600));
+  clone.style.setProperty('--photo-ratio',String(ratio));
   document.querySelector('#travelPhotoContent').replaceChildren(clone);photoDialog.showModal();
 });
 function closeTravelPhoto(){photoDialog.close();orbital.previewHeld=false;orbital.buttons[selectedIndex].focus();}

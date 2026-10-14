@@ -22,6 +22,7 @@ class BookJourneyController {
     this.active={book,locationBook,start:performance.now(),origin:{x:r.x+r.width/2,y:r.y+r.height/2},button};
     this.library.busy=this.library.previewHeld=true;clearTimeout(this.library.releaseTimer);
     document.body.classList.add('journey-active');document.body.dataset.journey='flight';
+    this.canvas.dataset.progress='0';
     document.querySelector('#journeyStatus').textContent=`正在穿越至${book.title}，按 Esc 可返回`;
     document.querySelector('#libraryView').setAttribute('aria-busy','true');
     this.card=document.createElement('div');this.card.className='journey-card';this.card.setAttribute('aria-hidden','true');

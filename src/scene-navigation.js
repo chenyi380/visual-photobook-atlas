@@ -43,8 +43,8 @@ class SceneNavigationController {
 // Actual tilted circles viewed through one perspective camera, not screen ellipses.
 function bookOrbitPoint(index,angle,globe) {
   const mobile=globe.width<720,inner=index===0;
-  const radius=globe.width*(mobile?(inner?.205:.282):(inner?.275:.405));
-  const tilt=(inner?10:mobile?42:18)*Math.PI/180,camera=globe.width*3;
+  const radius=globe.width*(mobile?(inner?.205:.34):(inner?.275:.405));
+  const tilt=(inner?10:mobile?55:18)*Math.PI/180,camera=globe.width*3;
   const z=radius*Math.cos(angle)*Math.cos(tilt),perspective=camera/(camera-z);
   const zoom=globe.sceneZoom??1;
   return {x:globe.centerX+Math.sin(angle)*radius*perspective*zoom,

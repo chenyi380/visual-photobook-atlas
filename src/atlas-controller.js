@@ -51,6 +51,7 @@ document.querySelector('#openTravelPhoto').addEventListener('click',()=>{
   clone.style.left=clone.style.top='0';clone.setAttribute('aria-hidden','false');
   const ratio=ATLAS_TRAVEL_PHOTOS[previewBook.id].ratio,width=Math.min(innerWidth*.85,(innerHeight-100)*ratio,1200);
   clone.style.width=`${width}px`;clone.style.height=`${width/ratio}px`;clone.style.setProperty('--projection-unit',String(width/600));
+  clone.style.setProperty('--photo-ratio',String(ratio));
   document.querySelector('#travelPhotoContent').replaceChildren(clone);photoDialog.showModal();
 });
 function closeTravelPhoto(){photoDialog.close();orbital.previewHeld=false;orbital.buttons[selectedIndex].focus();}
