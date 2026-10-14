@@ -41,7 +41,7 @@ export async function buildTravelPhotoLayers(root,covers,world){
     const softSvg=protectedSvg.replace('<mask id="soft">','<mask id="side"><rect width="1000" height="430" fill="url(#edge)"/></mask><mask id="soft"><g mask="url(#side)">').replace('</mask><clipPath','</g></mask><clipPath').replace('<g transform="translate(925,56)"','</g><g transform="translate(925,56)"').replace('</text></g></svg>','</text></svg>');
     const tonedSvg=['lava-field','dune-notes'].includes(id)?softSvg.replaceAll('#344144','#e5e2d9').replaceAll('#48585c','#d5d5cb').replaceAll('#49575a','#e5e2d9').replaceAll('#758586','#dbdfd5'):softSvg;
     const map=`assets/travel-maps-v2/${id}.svg`;await writeFile(resolve(root,map),tonedSvg.replace('r="5" fill="#be4e43"','r="7.5" fill="#be4e43"'));
-    result[id]={...c,map,ratio:covers[id].width/covers[id].height,approximate:true,mapCredit:'© OpenStreetMap contributors · Natural Earth'};
+    result[id]={...c,map:map+'?v=20261014-editorial3',ratio:covers[id].width/covers[id].height,approximate:true,mapCredit:'© OpenStreetMap contributors'};
   }
   return result;
 }
