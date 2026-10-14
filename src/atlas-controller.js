@@ -38,6 +38,22 @@ const orbital = new OrbitalLibrary(shelf, globe, books, {
 globe.dragController=new GlobeDragController(document.querySelector('#globeControl'),globe,()=>{
   hideProjection();orbital.active=null;orbital.buttons.forEach(button=>button.classList.remove('active'));
 });
+const photoDialog=document.querySelector('#travelPhotoDialog');
+memoryProjection.addEventListener('pointerenter',()=>{orbital.previewHeld=true;clearTimeout(orbital.releaseTimer);});
+memoryProjection.addEventListener('pointerleave',()=>{if(!photoDialog.open){orbital.previewHeld=false;orbital.endPreview();}});
+document.querySelector('#openTravelPhoto').addEventListener('click',()=>{
+  if(!previewBook)return;
+  orbital.previewHeld=true;
+  const clone=memoryProjection.cloneNode(true);clone.removeAttribute('id');clone.classList.add('photo-expanded');clone.querySelector('.photo-expand').remove();
+  clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+  clone.style.left=clone.style.top='0';clone.setAttribute('aria-hidden','false');
+  const ratio=ATLAS_TRAVEL_PHOTOS[previewBook.id].ratio,width=Math.min(innerWidth*.85,(innerHeight-100)*ratio,1200);
+  clone.style.width=`${width}px`;clone.style.height=`${width/ratio}px`;clone.style.setProperty('--projection-unit',String(width/600));
+  document.querySelector('#travelPhotoContent').replaceChildren(clone);photoDialog.showModal();
+});
+function closeTravelPhoto(){photoDialog.close();orbital.previewHeld=false;orbital.buttons[selectedIndex].focus();}
+document.querySelector('#closeTravelPhoto').addEventListener('click',closeTravelPhoto);
+photoDialog.addEventListener('cancel',event=>{event.preventDefault();closeTravelPhoto();});
 function hideProjection() {
   previewBook = null;
   memoryProjection.classList.remove('visible');
@@ -111,6 +127,7 @@ function closeReader(updateHash = true) {
 }
 document.querySelector('#closeReader').addEventListener('click', () => closeReader());
 addEventListener('keydown', event => {
+  if(photoDialog.open)return;
   if (event.key === 'Escape') {
     if (reading) closeReader();
     else if (orbital.opened) { setOrbitOpen(false); toggleAtlas.focus(); }

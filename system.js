@@ -362,16 +362,17 @@ class OrbitalLibrary {
     });
     this.syncLabels();element.setAttribute('aria-hidden','false');
   }
-  get paused(){return this.opened && (this.globe.dragging || this.hovered!==null || this.focused!==null);}
+  get paused(){return this.opened && (this.previewHeld || this.globe.dragging || this.hovered!==null || this.focused!==null);}
   syncLabels(){
     this.element.dataset.mode=this.opened?'books':'planets';
     this.buttons.forEach((button,index)=>{button.tabIndex=0;button.setAttribute('aria-label',this.opened?`阅读《${this.books[index].title}》，悬停预览地图与景色`:`小星球：${this.books[index].title}，点击展开全部画册`);});
   }
   preview(index){
+    clearTimeout(this.releaseTimer);
     if(!this.opened||this.morph||this.active===index)return;
     this.active=index;this.buttons.forEach((button,i)=>button.classList.toggle('active',i===index));this.callbacks.preview(this.books[index]);
   }
-  endPreview(){if(!this.opened||this.paused)return;this.active=null;this.buttons.forEach(button=>button.classList.remove('active'));this.callbacks.release();}
+  endPreview(){if(!this.opened||this.paused)return;clearTimeout(this.releaseTimer);this.releaseTimer=setTimeout(()=>{if(this.paused)return;this.active=null;this.buttons.forEach(button=>button.classList.remove('active'));this.callbacks.release();},220);}
   setOpen(opened){
     if(this.opened===opened)return;
     const from=this.buttons.map((_,index)=>this.pose(index));this.opened=opened;
@@ -1098,6 +1099,22 @@ const orbital = new OrbitalLibrary(shelf, globe, books, {
 globe.dragController=new GlobeDragController(document.querySelector('#globeControl'),globe,()=>{
   hideProjection();orbital.active=null;orbital.buttons.forEach(button=>button.classList.remove('active'));
 });
+const photoDialog=document.querySelector('#travelPhotoDialog');
+memoryProjection.addEventListener('pointerenter',()=>{orbital.previewHeld=true;clearTimeout(orbital.releaseTimer);});
+memoryProjection.addEventListener('pointerleave',()=>{if(!photoDialog.open){orbital.previewHeld=false;orbital.endPreview();}});
+document.querySelector('#openTravelPhoto').addEventListener('click',()=>{
+  if(!previewBook)return;
+  orbital.previewHeld=true;
+  const clone=memoryProjection.cloneNode(true);clone.removeAttribute('id');clone.classList.add('photo-expanded');clone.querySelector('.photo-expand').remove();
+  clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+  clone.style.left=clone.style.top='0';clone.setAttribute('aria-hidden','false');
+  const ratio=ATLAS_TRAVEL_PHOTOS[previewBook.id].ratio,width=Math.min(innerWidth*.85,(innerHeight-100)*ratio,1200);
+  clone.style.width=`${width}px`;clone.style.height=`${width/ratio}px`;clone.style.setProperty('--projection-unit',String(width/600));
+  document.querySelector('#travelPhotoContent').replaceChildren(clone);photoDialog.showModal();
+});
+function closeTravelPhoto(){photoDialog.close();orbital.previewHeld=false;orbital.buttons[selectedIndex].focus();}
+document.querySelector('#closeTravelPhoto').addEventListener('click',closeTravelPhoto);
+photoDialog.addEventListener('cancel',event=>{event.preventDefault();closeTravelPhoto();});
 function hideProjection() {
   previewBook = null;
   memoryProjection.classList.remove('visible');
@@ -1171,6 +1188,7 @@ function closeReader(updateHash = true) {
 }
 document.querySelector('#closeReader').addEventListener('click', () => closeReader());
 addEventListener('keydown', event => {
+  if(photoDialog.open)return;
   if (event.key === 'Escape') {
     if (reading) closeReader();
     else if (orbital.opened) { setOrbitOpen(false); toggleAtlas.focus(); }

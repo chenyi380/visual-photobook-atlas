@@ -18,16 +18,17 @@ class OrbitalLibrary {
     });
     this.syncLabels();element.setAttribute('aria-hidden','false');
   }
-  get paused(){return this.opened && (this.globe.dragging || this.hovered!==null || this.focused!==null);}
+  get paused(){return this.opened && (this.previewHeld || this.globe.dragging || this.hovered!==null || this.focused!==null);}
   syncLabels(){
     this.element.dataset.mode=this.opened?'books':'planets';
     this.buttons.forEach((button,index)=>{button.tabIndex=0;button.setAttribute('aria-label',this.opened?`阅读《${this.books[index].title}》，悬停预览地图与景色`:`小星球：${this.books[index].title}，点击展开全部画册`);});
   }
   preview(index){
+    clearTimeout(this.releaseTimer);
     if(!this.opened||this.morph||this.active===index)return;
     this.active=index;this.buttons.forEach((button,i)=>button.classList.toggle('active',i===index));this.callbacks.preview(this.books[index]);
   }
-  endPreview(){if(!this.opened||this.paused)return;this.active=null;this.buttons.forEach(button=>button.classList.remove('active'));this.callbacks.release();}
+  endPreview(){if(!this.opened||this.paused)return;clearTimeout(this.releaseTimer);this.releaseTimer=setTimeout(()=>{if(this.paused)return;this.active=null;this.buttons.forEach(button=>button.classList.remove('active'));this.callbacks.release();},220);}
   setOpen(opened){
     if(this.opened===opened)return;
     const from=this.buttons.map((_,index)=>this.pose(index));this.opened=opened;
