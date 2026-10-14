@@ -52,7 +52,7 @@ function updateMode(opened) {
   toggleAtlas.setAttribute('aria-label', opened ? '返回彩色小星球模式' : '展开半透明画册星环');
   toggleAtlas.querySelector('span').textContent = opened ? '小星球' : '画册星环';
   document.body.dataset.view = opened ? 'books' : 'planets';
-  document.querySelector('#orbitHint').textContent = opened ? '悬停暂停星环 · 点击画册阅读' : '点击任意小星球，展开旅行画册';
+  document.querySelector('#orbitHint').textContent = opened ? '拖动地球旋转 · 悬停暂停星环 · 点击画册阅读' : '拖动地球旋转 · 点击小星球展开画册';
   document.querySelector('#locationReadout').textContent = 'EARTH / AUTO ORBIT';
 }
 function setOrbitOpen(opened) { orbital.setOpen(opened); updateMode(opened); }
