@@ -284,8 +284,9 @@ body[data-renderer="software-sphere"] .planet-art>img {opacity:1;}
 .projection-image::after{display:none;}
 .projection-map{inset:0 auto auto 18%;width:80%;height:38%;object-fit:contain;object-position:50% 0%;opacity:.88;filter:none;}
 .memory-projection figcaption{left:4.4%;top:6%;max-width:84%;color:#263539;text-shadow:none;}
-.memory-projection figcaption span{font:400 calc(23px * var(--projection-unit,1))/1.15 Georgia,'Times New Roman',serif;letter-spacing:.20em;white-space:normal;}
-.memory-projection figcaption small{font:italic 400 calc(13px * var(--projection-unit,1))/1.4 Georgia,'Times New Roman',serif;letter-spacing:.13em;color:#354347;margin-top:5px;white-space:normal;}
+.memory-projection figcaption span{font:400 calc(18px * var(--projection-unit,1))/1.15 Georgia,'Times New Roman',serif;letter-spacing:.20em;white-space:normal;}
+.memory-projection figcaption small{font:italic 400 calc(11px * var(--projection-unit,1))/1.4 Georgia,'Times New Roman',serif;letter-spacing:.13em;color:#354347;margin-top:5px;white-space:normal;}
+.memory-projection figcaption ol{display:none;}
 .projection-coordinates{display:block!important;font-size:calc(9px * var(--projection-unit,1))!important;font-style:normal!important;letter-spacing:.03em!important;margin-top:5px;}
 .memory-projection[data-book="lava-field"] figcaption,.memory-projection[data-book="dune-notes"] figcaption,.memory-projection[data-book="lava-field"] figcaption small,.memory-projection[data-book="dune-notes"] figcaption small{color:#ece9df;}
 .memory-projection.visible{pointer-events:auto;}

@@ -73,9 +73,9 @@ class OrbitalLibrary {
       button.style.setProperty('--book-width',`${pose.width}px`);button.style.setProperty('--book-height',`${pose.height}px`);
       if(button.querySelectorAll && button.dataset.tileWidth!==pose.width.toFixed(2)){
         button.dataset.tileWidth=pose.width.toFixed(2);
-        const radius=pose.width/.95;
+        const radius=pose.width/1.35;
         button.querySelectorAll('.tile-segment').forEach((segment,i)=>{
-          const angle=((i+.5)/11-.5)*.95;
+          const angle=((i+.5)/11-.5)*1.35;
           segment.style.transform=`translate3d(${(radius*Math.sin(angle)).toFixed(2)}px,0,${(radius*(Math.cos(angle)-1)).toFixed(2)}px) rotateY(${(angle*180/Math.PI).toFixed(2)}deg)`;
         });
       }
