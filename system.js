@@ -280,7 +280,7 @@ class SkySphereRenderer {
     const gl=this.gl;gl.useProgram(this.program);gl.uniform1i(this.uniforms.uSky,0);
     gl.uniform1f(this.uniforms.uAspect,this.width/this.height);
     const yaw=-.95+(reducedMotion?0:seconds*.0028);
-    gl.uniform1f(this.uniforms.uYaw,yaw);gl.uniform1f(this.uniforms.uPitch,.32);gl.uniform1f(this.uniforms.uRoll,1.10);
+    gl.uniform1f(this.uniforms.uYaw,yaw);gl.uniform1f(this.uniforms.uPitch,-.32);gl.uniform1f(this.uniforms.uRoll,1.10);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
     this.canvas.dataset.yaw=yaw.toFixed(5);this.canvas.dataset.motion=reducedMotion?'still':'observer-rotation';
   }
