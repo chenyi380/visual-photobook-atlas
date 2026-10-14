@@ -162,7 +162,7 @@ class StarGlobe {
     this.bookRadius = this.width < 720
       ? Math.min(this.width * .27, this.height * .21, 260)
       : Math.min(this.width * .18, this.height * .275, 520);
-    this.planetUnit = fitPlanetUnit(this.width,this.height);
+    this.planetBaseUnit = this.planetUnit = fitPlanetUnit(this.width,this.height);
     this.planetRadius=this.planetUnit*1.24;
     this.baseRadius = this.targetRadius = this.libraryOpened ? this.bookRadius : this.planetRadius;
     this.prepareSphereGrid();

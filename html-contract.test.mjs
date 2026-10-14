@@ -28,7 +28,7 @@ test("ten books support hover preview and orbital opening", async () => {
   for (const id of ids.slice(1)) assert.match(data, new RegExp(`[\"']?${id}[\"']?: \\{`));
   assert.match(source, /#read\//);
   assert.match(source, /class OrbitalLibrary/);
-  assert.match(source, /activate\(book\) \{ openReader\(book\)/);
+  assert.ok(/activate\(book,button\).*journey.start\(book,button/.test(source),'activation starts the journey, not the reader');
   assert.ok(/if\s*\(!this.opened\)\s*\{\s*this.setOpen\(true\)/.test(source));
   assert.match(source, /class StarGlobe/);
   assert.match(source, /flyTo\(book/);

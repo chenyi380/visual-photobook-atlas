@@ -33,8 +33,10 @@ const orbital = new OrbitalLibrary(shelf, globe, books, {
     memoryProjection.dataset.book = book.id;
   },
   release() { hideProjection(); if (!reading) globe.releaseFocus(); },
-  activate(book) { openReader(book); },
+  activate(book,button) { orbital.callbacks.preview(book);journey.start(book,button,previewBook); },
 });
+const navigation=new SceneNavigationController(globe,orbital,updateMode,()=>reading||photoDialog.open||!!journey.active);
+const journey=new BookJourneyController(document.querySelector('#journeyCanvas'),globe,orbital,memoryProjection,book=>openReader(book),book=>orbital.buttons[books.indexOf(book)].focus());
 globe.dragController=new GlobeDragController(document.querySelector('#globeControl'),globe,()=>{
   hideProjection();orbital.active=null;orbital.buttons.forEach(button=>button.classList.remove('active'));
 });
@@ -62,16 +64,16 @@ function hideProjection() {
 }
 function updateMode(opened) {
   hideProjection();
-  globe.setLibraryMode(opened);
+  if(!globe.sceneController)globe.setLibraryMode(opened);
   globe.releaseFocus();
   toggleAtlas.setAttribute('aria-expanded', String(opened));
   toggleAtlas.setAttribute('aria-label', opened ? '返回彩色小星球模式' : '展开半透明画册星环');
   toggleAtlas.querySelector('span').textContent = opened ? '小星球' : '画册星环';
   document.body.dataset.view = opened ? 'books' : 'planets';
-  document.querySelector('#orbitHint').textContent = opened ? '拖动地球旋转 · 悬停暂停星环 · 点击画册阅读' : '拖动地球旋转 · 点击小星球展开画册';
+  document.querySelector('#orbitHint').textContent = opened ? '拖动地球旋转 · 悬停暂停 · 点击穿越 · 滚轮缩小返回' : '拖动地球旋转 · 滚轮放大展开画册';
   document.querySelector('#locationReadout').textContent = 'EARTH / AUTO ORBIT';
 }
-function setOrbitOpen(opened) { orbital.setOpen(opened); updateMode(opened); }
+function setOrbitOpen(opened) { if(journey.active)return;orbital.setOpen(opened); }
 function updateProjection() {
   if (!previewBook || !orbital.opened || reading) return;
   const point = globe.project(previewBook.lat, previewBook.lon);
@@ -95,7 +97,7 @@ function updateProjection() {
   document.querySelector('#projectionCone').setAttribute('points', `${point.x},${point.y} ${x + width*.45},${y + height} ${x + width*.67},${y + height}`);
   document.querySelector('#projectionLine').setAttribute('d', `M${x + width*.45},${y + height} L${point.x},${point.y} L${x + width*.67},${y + height}`);
 }
-globe.onFrame = time => { orbital.update(time); updateProjection(); };
+globe.onFrame = time => { navigation.update(time);orbital.update(time); updateProjection(); };
 toggleAtlas.addEventListener('click', () => setOrbitOpen(!orbital.opened));
 function openReader(book, updateHash = true) {
   selectedIndex = books.indexOf(book);
@@ -129,11 +131,12 @@ document.querySelector('#closeReader').addEventListener('click', () => closeRead
 addEventListener('keydown', event => {
   if(photoDialog.open)return;
   if (event.key === 'Escape') {
+    if(journey.cancel())return;
     if (reading) closeReader();
     else if (orbital.opened) { setOrbitOpen(false); toggleAtlas.focus(); }
     return;
   }
-  if (reading || event.altKey || event.ctrlKey || event.metaKey) return;
+  if (reading || journey.active || event.altKey || event.ctrlKey || event.metaKey) return;
   if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
     event.preventDefault();
     selectedIndex = (selectedIndex + (event.key === 'ArrowRight' ? 1 : -1) + books.length) % books.length;
@@ -141,6 +144,7 @@ addEventListener('keydown', event => {
   }
 });
 function applyHash() {
+  journey.cancel();
   const [state, id] = location.hash.slice(1).split('/');
   const book = books.find(item => item.id === id);
   if (state === 'read' && book) { if (!reading || selectedIndex !== books.indexOf(book)) openReader(book, false); }

@@ -315,3 +315,27 @@ body[data-renderer="software-sphere"] .planet-art>img {opacity:1;}
  .photo-expanded .projection-credits{font-size:6px;}
  .cover-credit{left:174px;bottom:9px;font-size:7px;}
 }
+/* Continuous wheel reveal: no CSS timer fights the reversible camera coordinate. */
+.holographic-book,.planet-art{transition:none!important;}
+.holographic-book{opacity:var(--book-opacity,0)!important;}
+.planet-art{opacity:var(--planet-opacity,1)!important;}
+.orbital-book{transition:none;}
+.orbital-book.active .orbital-title b{font-size:clamp(17px,1.23vw,26px);}
+.orbital-book.active .orbital-title small,.orbital-book.active[data-book="nanchang"] .orbital-title small{font-size:clamp(9px,.72vw,16px);}
+.projection-map{inset:0;width:100%;height:100%;object-fit:fill;opacity:1;filter:none;}
+.memory-projection figcaption{max-width:27%;}
+.memory-projection figcaption span{font-size:calc(18px * var(--projection-unit,1));letter-spacing:.20em;}
+#journeyCanvas{position:fixed;inset:0;z-index:40;width:100vw;height:100vh;pointer-events:none;display:none;}
+#journeyCanvas.visible{display:block;pointer-events:auto;}
+.journey-card{position:fixed;left:0;top:0;z-index:41;display:flex;align-items:center;gap:12px;padding:8px;background:#183252df;border:1px solid #a3ddff;border-radius:9px;color:#eff7ff;font:20px/1.2 SimSun,Georgia,serif;box-shadow:0 0 18px #77cfff;transform-origin:center;pointer-events:none;will-change:transform,opacity;}
+.journey-card img{width:53%;height:100%;object-fit:cover;border-radius:4px;}
+body.journey-active .orbital-book.active{opacity:0!important;}
+body.journey-active #libraryView{pointer-events:none;}
+body.journey-active .globe-control,body.journey-active .orbital-book,body.journey-active .memory-projection{pointer-events:none!important;}
+@media(max-width:720px){
+ .orbital-book.active .orbital-title b{font-size:11px;}
+ .orbital-book.active .orbital-title small,.orbital-book.active[data-book="nanchang"] .orbital-title small{font-size:5px;}
+ .memory-projection figcaption span{font-size:calc(18px * var(--projection-unit,1));}
+ .memory-projection figcaption small{font-size:calc(11px * var(--projection-unit,1));}
+ .journey-card{font-size:11px;padding:4px;gap:5px;}
+}

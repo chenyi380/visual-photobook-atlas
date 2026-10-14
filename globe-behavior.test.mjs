@@ -12,6 +12,8 @@ const { StarGlobe, books, radians } = context.testing;
 const modelSource=await readFile(new URL('src/orbital-model.js',root),'utf8');
 vm.runInContext(modelSource+'\nthis.physics={ORBIT_ELEMENTS,ORBIT_MU,keplerPosition,orbitPositionAtAnomaly,solveEccentricAnomaly,projectOrbitalPoint,fitPlanetUnit};',context);
 const physics=context.physics;
+const navigationSource=await readFile(new URL('src/scene-navigation.js',root),'utf8');
+vm.runInContext(navigationSource+'\nthis.sceneTools={sceneNavigationPose,bookOrbitPoint,dampedOrbitStep,SceneNavigationController};',context);
 const orbitSource = await readFile(new URL("src/orbit-library.js", root), "utf8");
 context.document.querySelector = () => ({ setAttribute() {} });
 vm.runInContext(orbitSource + "\nthis.OrbitalLibraryForTest = OrbitalLibrary;", context);
@@ -65,7 +67,7 @@ test("embedded texture contains the real JPEG and does not need a separate image
   assert.equal((map.match(/fill="#ca7655"/g) || []).length, 1, "only Nanchang region is highlighted");
 });
 
-test("both orbital book rings stop during hover and resume after pointer departure", () => {
+test("both orbital book rings ease to rest during hover and accelerate after departure", () => {
   const library = Object.assign(Object.create(context.OrbitalLibraryForTest.prototype), {
     opened: true, phase: 0, lastTime: 0, hovered: null, focused: null, morph: null,
     element: { dataset: {} }, books, globe: mockGlobe(),
@@ -75,13 +77,13 @@ test("both orbital book rings stop during hover and resume after pointer departu
   assert.ok(library.phase > 0);
   const frozen = library.phase;
   library.hovered = 0;
-  library.update(160);
-  library.update(240);
-  assert.equal(library.phase, frozen);
+  for(let time=160;time<=960;time+=80)library.update(time);
+  assert.ok(library.phase-frozen<.005,'stop is smoothly bounded, not a hard cut');
+  const stopped=library.phase;library.update(1040);assert.equal(library.phase,stopped);
   assert.equal(library.element.dataset.motion, "paused");
   library.hovered = null;
-  library.update(320);
-  assert.ok(library.phase > frozen);
+  library.update(1120);
+  assert.ok(library.phase > stopped);
   assert.equal(library.element.dataset.motion, "rotating");
   const poses = books.map((_, index) => library.pose(index));
   assert.ok(poses.some(pose => pose.depth > 0) && poses.some(pose => pose.depth < 0));
@@ -116,7 +118,7 @@ test('small-planet click transforms all books without opening a reader; second c
   library.phase = 1.75;
   library.buttons[0].handlers.click();
   assert.equal(library.opened, true);
-  assert.equal(library.phase, 0, 'book reveal starts at the reference layout');
+  assert.equal(library.phase, 1.75, 'reversible reveal preserves orbit phase without teleporting');
   assert.equal(mode, 1);
   assert.equal(read, 0);
   assert.equal(library.element.dataset.mode, 'books');
@@ -239,4 +241,66 @@ test('editorial maps include true street detail, red position, compass and kilom
     assert.match(svg,/OpenStreetMap contributors/);
   }
   assert.equal((JSON.parse(bundle.match(/const ATLAS_PLANET_IMAGES = (.*);\n/)?.[1])).length,10);
+});
+
+test('wheel reveal starts with uniform scene magnification and reverses continuously',()=>{
+  const pose=context.sceneTools.sceneNavigationPose;
+  for(const p of [0,.05,.10,.20]){
+    const s=pose(p,200,260);assert.equal(s.blend,0);assert.ok(Math.abs(s.radius/200-s.zoom)<1e-12);
+  }
+  assert.ok(pose(.20,200,260).zoom>1.2);
+  const end=pose(1,200,260);assert.equal(end.radius,260);assert.equal(end.blend,1);assert.equal(end.zoom,1);
+  for(let p=.001;p<=1;p+=.001){const a=pose(p,200,260),b=pose(p-.001,200,260);assert.ok(Math.abs(a.radius-b.radius)<.3);assert.ok(Math.abs(a.blend-b.blend)<.003);}
+  context.addEventListener=(name,callback)=>{if(name==='wheel')context.wheelCallback=callback;};
+  context.innerHeight=720;
+  const globe={...mockGlobe(),planetRadius:200,bookRadius:260,planetBaseUnit:160};
+  const element={dataset:{},style:{setProperty(){}}},library={element,opened:false,syncLabels(){}};
+  context.document.body.classList.toggle=()=>{};
+  const nav=new context.sceneTools.SceneNavigationController(globe,library,()=>{},()=>false);
+  let prevented=false;
+  context.wheelCallback({deltaY:-120,deltaMode:0,target:{closest:()=>false},preventDefault(){prevented=true;}});
+  assert.ok(prevented);nav.update(80);assert.ok(nav.progress>0&&nav.progress<1);
+  const radius=globe.baseRadius,unit=globe.planetUnit;assert.ok(Math.abs(radius/200-unit/160)<1e-12);
+  nav.setOpen(true);for(let t=160;t<=1600;t+=80)nav.update(t);assert.equal(library.opened,true);
+  const before=nav.progress;nav.setOpen(false);nav.update(1680);assert.ok(nav.progress<before&&nav.progress>0);
+  for(let t=1760;t<=3200;t+=80)nav.update(t);assert.equal(nav.progress,0);assert.equal(library.opened,false);
+});
+
+test('book depth uses one perspective camera and orbit speed is frame-rate independent',()=>{
+  const {bookOrbitPoint:point,dampedOrbitStep:step}=context.sceneTools,globe=mockGlobe();
+  const front=point(5,0,globe),back=point(5,Math.PI,globe);
+  assert.ok(front.perspective>1&&back.perspective<1);assert.ok(front.y>globe.restCenterY&&back.y<globe.restCenterY);
+  for(let angle=0;angle<6.3;angle+=.1){const p=point(5,angle,globe);assert.ok(Number.isFinite(p.x+p.y+p.z));}
+  const run=dt=>{let speed=.000045,angle=0;for(let t=0;t<800;t+=dt){const s=step(speed,0,dt);speed=s.speed;angle+=s.angle;}return {speed,angle};};
+  const a=run(16),b=run(40);assert.ok(Math.abs(a.angle-b.angle)<1e-10);assert.ok(a.speed<2e-8);
+});
+
+test('geographic projection is native-aspect full-sky detail, not a tiny inset or country silhouette',async()=>{
+  const bundle=await readFile(new URL('system.js',root),'utf8');
+  const meta=JSON.parse(bundle.match(/const ATLAS_TRAVEL_PHOTOS = (.*);\n/)?.[1]);
+  for(const [id,m] of Object.entries(meta)){
+    const svg=await readFile(new URL(m.map,root),'utf8');
+    const h=Number(svg.match(/viewBox="0 0 1200 ([\d.]+)"/)[1]);assert.ok(Math.abs(1200/h-m.ratio)<.001);
+    assert.equal(m.mapExtent,'full-sky');assert.ok(m.marker[0]>.5&&m.marker[1]<.25);
+    assert.match(svg,/data-geography="local-osm"/);assert.match(svg,/fill="#e6e8df" fill-opacity=".40"/);
+    assert.ok((svg.match(/<path/g)||[]).length>30,id);assert.doesNotMatch(svg,/NaN|Infinity|undefined/);
+  }
+  const css=await readFile(new URL('system.css',root),'utf8');assert.match(css,/\.projection-map\{inset:0;width:100%;height:100%;object-fit:fill;opacity:1/);
+});
+
+test('journey completes once after flight and tunnel; Escape cancels and reduced motion is short',async()=>{
+  const journeySource=await readFile(new URL('src/book-journey.js',root),'utf8');
+  vm.runInContext(journeySource+'\nthis.journeyTools={journeyPhase,journeyCurve,BookJourneyController};',context);
+  const {journeyPhase:phase,journeyCurve:curve,BookJourneyController:Journey}=context.journeyTools;
+  assert.equal(phase(0).phase,'flight');assert.equal(phase(1049).phase,'flight');assert.equal(phase(1050).phase,'tunnel');assert.equal(phase(2450).phase,'opening');assert.equal(phase(2800).phase,'complete');
+  assert.equal(phase(219,true).phase,'opening');assert.equal(phase(220,true).phase,'complete');
+  assert.deepEqual(JSON.parse(JSON.stringify(curve({x:10,y:20},{x:90,y:70},1,720))),{x:90,y:70});
+  const gradient={addColorStop(){}},ctx=new Proxy({}, {get:(o,key)=>o[key]??(key.startsWith('create')?()=>gradient:()=>{}),set:(o,key,value)=>(o[key]=value,true)});
+  context.innerWidth=1280;context.innerHeight=720;context.requestAnimationFrame=()=>{};
+  context.document.body.dataset={};context.ATLAS_TRAVEL_PHOTOS={nanchang:{marker:[.6,.17]}};
+  let opens=0,cancels=0;
+  const make=()=>Object.assign(Object.create(Journey.prototype),{active:{start:0,book:books[0],origin:{x:450,y:500}},globe:mockGlobe(),context:ctx,canvas:{dataset:{}},card:{style:{}},projection:{getBoundingClientRect:()=>({x:300,y:20,width:600,height:450})},clear(){this.active=null;},onComplete(){opens++;},onCancel(){cancels++;}});
+  const travel=make();for(const time of [0,1000,1500,2450,2799]){travel.frame(time);assert.equal(opens,0);}
+  travel.frame(2800);travel.frame(3000);assert.equal(opens,1);
+  const cancel=make();assert.equal(cancel.cancel(),true);cancel.frame(3000);assert.equal(opens,1);assert.equal(cancels,1);assert.equal(cancel.cancel(),false);
 });
