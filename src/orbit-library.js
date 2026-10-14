@@ -71,7 +71,8 @@ class OrbitalLibrary {
       const pose=this.morph?Object.fromEntries(['x','y','depth','scale','width','height','turn','roll'].map(key=>[key,this.morph.from[index][key]+(target[key]-this.morph.from[index][key])*amount])):target;
       const selected=this.active===index,scale=pose.scale+(selected&&this.opened?.16:0);
       button.style.setProperty('--book-width',`${pose.width}px`);button.style.setProperty('--book-height',`${pose.height}px`);
-      if(button.querySelectorAll){
+      if(button.querySelectorAll && button.dataset.tileWidth!==pose.width.toFixed(2)){
+        button.dataset.tileWidth=pose.width.toFixed(2);
         const radius=pose.width/.95;
         button.querySelectorAll('.tile-segment').forEach((segment,i)=>{
           const angle=((i+.5)/11-.5)*.95;
