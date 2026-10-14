@@ -267,3 +267,37 @@ body[data-renderer="software-sphere"] .planet-art>img {opacity:1;}
   .sky-credit{font-size:7px;left:10px;bottom:9px;}
   .orbit-hint{font-size:9px;bottom:28px;}
 }
+/* Curved cylindrical tiles and photo-preserving editorial projection. */
+.globe-control{position:absolute;z-index:5;border:0;border-radius:50%;background:transparent;color:transparent;padding:0;cursor:grab;touch-action:none;}
+.globe-control[data-dragging="true"]{cursor:grabbing;}
+.globe-control:focus-visible{outline:1px dashed #9ac9eb;outline-offset:8px;}
+.curved-tile{display:block;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none;border-radius:0;transform-style:preserve-3d;overflow:visible;}
+.orbital-book{transform-style:preserve-3d;will-change:transform;}
+.tile-segment{position:absolute;left:50%;top:0;width:calc(var(--book-width) / 11 + .55px);height:100%;margin-left:calc(var(--book-width) / -22);overflow:hidden;backface-visibility:hidden;}
+.tile-face{position:absolute;top:0;left:calc(var(--segment) * var(--book-width) / -11);width:var(--book-width);height:100%;display:flex;align-items:center;padding:8px;gap:13px;border:1.2px solid #91bcf4;border-radius:10px;background:linear-gradient(110deg,#1a3155e6,#071124e6);box-shadow:inset 0 0 19px #6aa8ef30;}
+.orbital-book.active .curved-tile{border:0;box-shadow:none;background:none;transform:none;}
+.orbital-book.active .tile-face{border:2px solid #8edaff;box-shadow:inset 0 0 21px #5197df70;background:linear-gradient(115deg,#254a7bdc,#102746ed);}
+.orbital-cover img,.orbital-book[data-book="nanchang"] .orbital-cover img{filter:none;height:100%;transform:none;object-position:center;}
+.memory-projection{border:1px solid #aecbdd66;border-radius:3px;background:none;box-shadow:0 0 18px #74bfff18;overflow:hidden;}
+.projection-image{inset:0;background:none;}
+.projection-image img,.memory-projection[data-book="nanchang"] .projection-image img{height:100%;width:100%;object-fit:contain;opacity:1;filter:none;transform:none;object-position:center;}
+.projection-image::after{display:none;}
+.projection-map{inset:0 auto auto 18%;width:80%;height:38%;object-fit:fill;opacity:.88;filter:none;}
+.memory-projection figcaption{left:4.4%;top:6%;max-width:84%;color:#263539;text-shadow:none;}
+.memory-projection figcaption span{font:400 clamp(14px,1.25vw,22px)/1.15 Georgia,'Times New Roman',serif;letter-spacing:.20em;white-space:normal;}
+.memory-projection figcaption small{font:italic 400 clamp(9px,.74vw,13px)/1.4 Georgia,'Times New Roman',serif;letter-spacing:.13em;color:#354347;margin-top:5px;white-space:normal;}
+#projectionCoordinates{display:block;font-size:9px;font-style:normal;letter-spacing:.03em;margin-top:5px;}
+.projection-credits{position:absolute;bottom:4px;left:6px;right:6px;display:flex;justify-content:space-between;gap:10px;color:#e3e8e9;font:7px/1.2 Georgia,serif;text-shadow:0 1px 3px #000;}
+.projection-credits a{color:inherit;max-width:56%;text-decoration:none;}
+.projection-credits small{font:inherit;text-align:right;}
+.cover-credit{position:fixed;z-index:11;left:250px;bottom:14px;color:#aab8c9;font:10px/1.3 Georgia,serif;text-decoration:none;}
+.cover-credit:hover{text-decoration:underline;color:white;}
+.projection-beam.visible{opacity:1;}
+@media(max-width:720px){
+ .tile-face{padding:4px;gap:5px;border-radius:5px;}
+ .memory-projection figcaption span{font-size:12px;}
+ .memory-projection figcaption small{font-size:8px;}
+ #projectionCoordinates{font-size:6px;}
+ .projection-credits{font-size:5px;}
+ .cover-credit{left:174px;bottom:9px;font-size:7px;}
+}

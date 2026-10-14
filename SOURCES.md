@@ -1,6 +1,12 @@
 # 世界视觉档案：图片与参考来源
 
-## 当前真实星空与轨道模型
+## 当前版本素材（2026-10-14）
+
+当前背景为 NASA/Goddard SVS 的 8192×4096 [Deep Star Maps](https://svs.gsfc.nasa.gov/3895/) 星表图，非新拍照片；只调整显示曝光与观察方向，不任意编造星点。新的十张封面和南昌白昼投影摄影均来自许可明确的 Wikimedia Commons，逐张作者、原图、许可和改动说明见 [MEDIA-SOURCES.md](MEDIA-SOURCES.md)。
+
+新投影地图来自缓存的 OpenStreetMap 实际道路、河流、海岸和冰川线，不用国家剪影代替地方地图。定位仅标大致区域；坐标用于导航转向，未当作照片GPS显示。照片、地图、文字分别渲染，照片原色/主体/画幅保留。
+
+## 历史版本：真实星空与轨道模型
 
 - 背景原图：[The Milky Way panorama](https://www.eso.org/public/images/eso0932a/)，ESO/S. Brunier，6000×3000真实全天实拍拼接；下载地址 https://cdn.eso.org/images/large/eso0932a.jpg ，本地 `assets/eso-milkyway-6k.jpg`。遵循 [ESO CC BY 4.0 使用条款](https://www.eso.org/public/outreach/copyright/)，网页保留清晰、可点击署名。只做天球投影、观察方向旋转，没有AI修改。
 - [Spacekit](https://github.com/typpo/spacekit)、[Stellarium Web Engine](https://github.com/Stellarium/stellarium-web-engine)、[Three.js CSS3DRenderer](https://threejs.org/docs/pages/CSS3DRenderer.html) 为功能和架构研究参考，未复制代码、未新增运行时依赖。

@@ -1,0 +1,112 @@
+{
+  "north-waves": {
+    "file": "assets/covers-v2/north-waves.jpg",
+    "width": 1920,
+    "height": 920,
+    "author": "Eric Kilby",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Beach_View_from_Dyrholaey_Overlook.jpg",
+    "description": "Beach View from Dyrholaey Overlook"
+  },
+  "tidelines": {
+    "file": "assets/covers-v2/tidelines.jpg",
+    "width": 1920,
+    "height": 1285,
+    "author": "Maarten Heerlien from Voorschoten, The Netherlands",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Islands_in_Seto_Inland_Sea_(6453263227).jpg",
+    "description": "Islands in Seto Inland Sea"
+  },
+  "naoshima": {
+    "file": "assets/covers-v2/naoshima.jpg",
+    "width": 1920,
+    "height": 963,
+    "author": "KimonBerlin",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Naoshima_(7046724589).jpg",
+    "description": "Naoshima"
+  },
+  "dune-notes": {
+    "file": "assets/covers-v2/dune-notes.jpg",
+    "width": 1920,
+    "height": 1281,
+    "author": "Thomas Fuhrmann",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Erg_Chebbi_sunset.jpg",
+    "description": "the sand dunes of Erg Chebbi at sunset - Sahara Desert - taken in Morocco in 2021 - taken by Thomas Fuhrmann, SnowmanStudios - see more pictures on www.snowmanstudios.de"
+  },
+  "iceland": {
+    "file": "assets/covers-v2/iceland.jpg",
+    "width": 1920,
+    "height": 1281,
+    "author": "Giles Laurent",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:037_Icebergs_at_J%C3%B6kuls%C3%A1rl%C3%B3n_(Iceland)_Photo_by_Giles_Laurent.jpg",
+    "description": "Icebergs at Jökulsárlón (Iceland)."
+  },
+  "lava-field": {
+    "file": "assets/covers-v2/lava-field.jpg",
+    "width": 1920,
+    "height": 1280,
+    "author": "Giles Laurent",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:001_Volcano_eruption_of_Litli-Hr%C3%BAtur_in_Iceland_in_2023_Photo_by_Giles_Laurent.jpg",
+    "description": "Volcano eruption at Fagradalsfjall next to Litli-Hrútur in Iceland in 2023 captured from up close with a drone. Such a shot was only made possible by the use of new technologies, since it is otherwise impossible to safely observe an erupting volcano at such close range. The picture was also captured with Keilir perfectly aligned in the background. The extreme temperature of the lava creates a heat haze that can be seen on the left side of the image, being carried by the wind."
+  },
+  "earth-city": {
+    "file": "assets/covers-v2/earth-city.jpg",
+    "width": 1920,
+    "height": 1188,
+    "author": "Petar Milošević",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Ksar_A%C3%AFt_Benhaddou,_Marocco_(%D8%A3%D9%8A%D8%AA_%D8%A8%D9%86_%D8%AD%D8%AF%D9%88%D8%8C_%D8%A7%D9%84%D9%85%D8%BA%D8%B1%D8%A8,_%E2%B4%B0%E2%B5%A2%E2%B5%9C_%E2%B5%83%E2%B4%B0%E2%B4%B7%E2%B4%B7%E2%B5%93).jpg",
+    "description": "Ksar Aït Benhaddou, Marocco Aït Benhaddou (Arabic: آيت بن حدّو) is a historic ighrem or ksar (fortified village) along the former caravan route between the Sahara and Marrakesh in Morocco. It is considered a great example of Moroccan earthen clay architecture and has been a UNESCO World Heritage Site since 1987. World Heritage Site Moroccan cultural heritage: ID Q309436"
+  },
+  "white-island": {
+    "file": "assets/covers-v2/white-island.jpg",
+    "width": 1920,
+    "height": 1440,
+    "author": "Renate Hano",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Torii_Schrein,_Naoshima,.jpg",
+    "description": "Torii gate, Naoshima island, Kagawa Prefecture, Japan"
+  },
+  "nanchang": {
+    "file": "assets/covers-v2/nanchang.jpg",
+    "width": 1920,
+    "height": 1167,
+    "author": "Akira CA",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Nanchang_Skyline.jpg",
+    "description": "Nanchang Skyline at night, with the Pavilion of Prince Teng in the front"
+  },
+  "morocco": {
+    "file": "assets/covers-v2/morocco.jpg",
+    "width": 1920,
+    "height": 1440,
+    "author": "C messier",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Ait_Zineb_-_Ksar_of_A%C3%AFt_Benhaddou_-_20190716175500.jpg",
+    "description": "Ait Zineb, Ksar of Aït Benhaddou."
+  },
+  "nanchang-day": {
+    "file": "assets/covers-v2/nanchang-day.jpg",
+    "width": 1920,
+    "height": 1440,
+    "author": "Yumeto",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:20240207_Tengwang_Ge_(113337).jpg",
+    "description": "Tengwang Pavilion"
+  }
+}
