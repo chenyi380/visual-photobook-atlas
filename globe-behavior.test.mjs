@@ -293,6 +293,7 @@ test('geographic projection preserves aspect with readable 15–25% real negativ
 
 test('cinematic journey crosses space, atmosphere, cloud sea and opening before reader; cancellation is safe',async()=>{
   const journeySource=await readFile(new URL('src/book-journey.js',root),'utf8');
+  assert.match(journeySource,/ctx\.arc\(cx,cy,radius,0,Math\.PI\*2\)/,'rolled Earth clipping must close outside the viewport, not through screen corners');
   vm.runInContext(journeySource+'\nthis.journeyTools={journeyPhase,journeyCurve,BookJourneyController};',context);
   const {journeyPhase:phase,journeyCurve:curve,BookJourneyController:Journey}=context.journeyTools;
   for(const [time,expected] of [[0,'departure'],[549,'departure'],[550,'space'],[1600,'atmosphere'],[2850,'clouds'],[4050,'destination'],[4850,'materialize'],[6100,'opening'],[7999,'opening'],[8000,'complete']])assert.equal(phase(time).phase,expected);
@@ -311,7 +312,7 @@ test('cinematic journey crosses space, atmosphere, cloud sea and opening before 
   };
   const travel=make();for(const time of [0,549,550,1300,1600,2100,2850,3350,4050,4500,4850,5500,6100,7200,7800,7999]){travel.frame(time);assert.equal(opens,0);}
   assert.equal(travel.canvas.dataset.cloudImage,'ready');assert.equal(travel.canvas.dataset.destinationImage,'ready');assert.ok(Number(travel.canvas.dataset.totalProgress)>.99);
-  assert.equal(travel.canvas.dataset.bookGeometry,'perspective-hardcover-fan');assert.ok(Number(travel.canvas.dataset.bookPitch)>55);assert.ok(Number(travel.canvas.dataset.bookOpen)>.99);
+  assert.equal(travel.canvas.dataset.bookGeometry,'perspective-hardcover-fan');assert.equal(travel.canvas.dataset.principalFolios,'4');assert.ok(Number(travel.canvas.dataset.bookPitch)>55);assert.ok(Number(travel.canvas.dataset.bookOpen)>.99);
   travel.frame(8000);travel.frame(8200);assert.equal(opens,1);assert.equal(travel.library.busy,false);assert.equal(context.document.body.dataset.journey,'idle');assert.ok(cancelledFrames.length>0);
   const cancel=make();assert.equal(cancel.cancel(),true);cancel.frame(8000);assert.equal(opens,1);assert.equal(cancels,1);assert.equal(cancel.cancel(),false);
   const reduced=make();reduced.globe.reducedMotion=true;reduced.frame(219);assert.equal(opens,1);reduced.frame(220);assert.equal(opens,2);

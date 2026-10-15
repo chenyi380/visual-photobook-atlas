@@ -4,7 +4,9 @@ const cosmicSmooth=(a,b,value)=>{const p=Math.max(0,Math.min(1,(value-a)/(b-a)))
 function cosmicIntroPose(milliseconds,reducedMotion=false){
   const t=reducedMotion?4:Math.max(0,milliseconds/1000);
   const complete=t>=4;
-  const advance=cosmicSmooth(.8,3.85,t);
+  // The reference's sphere is already the hero above the palm by 1.5s.
+  // The remaining two seconds change its energy/core, not its basic legibility.
+  const advance=cosmicSmooth(.66,1.92,t);
   return {seconds:Math.min(4,t),active:!complete,
     phase:t<.35?'black':t<.9?'fist':t<1.45?'unfurl':t<2.15?'rise':t<3.05?'satellites':t<3.55?'vortex':t<4?'closeup':'complete',
     veil:1-cosmicSmooth(.35,.78,t),

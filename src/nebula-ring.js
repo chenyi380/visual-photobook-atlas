@@ -51,10 +51,11 @@ class NebulaRingRenderer {
         vec2 view=vec2(screen.x*c+screen.y*s,-screen.x*s+screen.y*c);
         float tilt=.32,tangent=tan(tilt),cosine=cos(tilt);
         float mass=0.,filaments=0.,dust=0.;
-        // Three height slices integrate the soft volume thickness. Their turbulent
-        // density is continuous, rather than three visible geometric ring lines.
+        // Closely overlapping density samples resolve one gaseous volume. The
+        // previous wide offsets produced three separate luminous silhouettes.
         for(int layer=0;layer<3;layer++){
-          float h=(float(layer)-1.)*.105;
+          float h=(float(layer)-1.)*.018;
+          float sampleWeight=layer==1?.48:.26;
           float divisor=tangent+view.y/12.;
           if(abs(divisor)<.025)continue;
           float depth=(view.y-h)/divisor;
@@ -65,31 +66,35 @@ class NebulaRingRenderer {
           float visible=foregroundMask(pixel,depth);
           if(visible<.01)continue;
           float angle=atan(q.y,q.x),time=uTime*.15;
-          vec2 flow=vec2(radius*4.8,0.)+vec2(cos(angle-time*.28),sin(angle-time*.28))*3.2;
-          float bend=fbm(vec2(cos(angle)*2.2,sin(angle)*2.2)+time*.22)-.5;
-          float warp=.16*bend+.035*sin(angle*5.-time);
-          float radial=(radius-2.83-warp)/.44;
-          float envelope=exp(-radial*radial*1.8);
-          float broad=fbm(flow+vec2(fbm(flow*.65+time),0.)*1.7);
-          float billow=fbm(q*3.9+vec2(-time,time*.5));
-          float irregular=smoothstep(.16,.69,broad*.7+billow*.42);
-          float spiral=sin(radius*8.5-angle*2.+time*1.7+bend*5.);
-          float strand=pow(max(0.,spiral*.5+.5),5.)*(.25+irregular);
+          // Advect a continuous Cartesian density field around the orbital
+          // centre. No sine/radial repetition can turn it into parallel rails.
+          float turn=time*.28+radius*.17,ct=cos(turn),st=sin(turn);
+          vec2 flow=mat2(ct,-st,st,ct)*q;
+          vec2 warp=vec2(noise(flow*1.7+time*.21),noise(flow*1.9-vec2(time*.16,4.7)))-.5;
+          float billow=fbm(flow*.92+warp*.6);
+          float cloud=fbm(flow*3.6+warp*2.4+vec2(-time*.11,time*.07));
+          float width=.38+.26*billow;
+          float radial=(radius-2.83-(billow-.5)*.42)/width;
+          float envelope=exp(-radial*radial*1.3);
+          float irregular=smoothstep(.24,.69,cloud*.76+billow*.44);
+          float ridge=1.-smoothstep(.025,.17,abs(noise(flow*8.2+warp*3.5)-.51));
+          float tendrils=ridge*smoothstep(.34,.65,cloud);
+          float scattered=.18+.82*smoothstep(.26,.64,billow);
           float whorl=fract((angle+PI)/(2.*PI)-time*.035+1.);
           float formation=smoothstep(0.,.12,uFormation)*(1.-smoothstep(uFormation*1.22,uFormation*1.22+.16,whorl));
-          float density=envelope*(.12+irregular*.62+strand*.42)*formation*visible;
-          mass+=density*.43;
-          filaments+=envelope*strand*irregular*.38*formation*visible;
+          float density=envelope*(.025+irregular*.79+tendrils*.19)*scattered*formation*visible;
+          mass+=density*sampleWeight*1.35;
+          filaments+=envelope*tendrils*irregular*sampleWeight*.7*formation*visible;
           // Sparse dust belongs to the nebula coordinates and travels within it;
           // it is not a random screen-space star field or a planet-attached tail.
-          vec2 grain=vec2(angle*61.-time*.9,radius*99.+bend*4.);
+          vec2 grain=vec2(angle*61.-time*.9,radius*99.+warp.y*4.);
           vec2 cell=floor(grain),local=fract(grain)-.5;
           float seed=hash(cell),spark=exp(-dot(local,local)*110.);
-          dust+=spark*smoothstep(.978,.998,seed)*envelope*formation*visible*.9;
+          dust+=spark*smoothstep(.966,.998,seed)*envelope*formation*visible*sampleWeight*1.8;
         }
         float alpha=(1.-exp(-mass*1.75))*uAlpha;
         vec3 blue=vec3(.055,.21,.80),cyan=vec3(.14,.83,1.);
-        vec3 color=mix(blue,cyan,clamp(filaments*2.5+.18,0.,.92));
+        vec3 color=mix(blue,cyan,clamp(filaments*2.2+mass*.48+.10,0.,.85));
         color+=vec3(.28,.62,.90)*filaments+vec3(.7,.92,1.)*dust;
         alpha=clamp(alpha+dust*uAlpha*.62,0.,.84);
         gl_FragColor=vec4(color,alpha);

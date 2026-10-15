@@ -35,7 +35,9 @@ class BookJourneyController {
   loadPhoto(book){return this.loadImage(ATLAS_BOOK_IMAGES[book.id]||ATLAS_PROJECTION_IMAGES[book.id]);}
   makeBook(book){
     const card=document.createElement('div');card.className='journey-card journey-book';card.setAttribute('aria-hidden','true');card.textContent=book.title;
-    document.body.append(card);this.card=card;this.sizeBook();this.coverTexture=this.createCoverTexture(book);
+    document.body.append(card);this.card=card;this.sizeBook();this.coverTexture=this.createCoverTexture(book);this.innerTexture=null;
+    const active=this.active,prepareInner=()=>{if(active===this.active&&active.photo.complete&&active.photo.naturalWidth>0)this.innerTexture=this.createInnerTexture(book,active.photo);};
+    prepareInner();active.photo.addEventListener?.('load',prepareInner,{once:true});
   }
   createCoverTexture(book){
     const canvas=document.createElement('canvas');canvas.width=700;canvas.height=910;const c=canvas.getContext('2d');
@@ -53,6 +55,16 @@ class BookJourneyController {
     else{c.font='400 88px Georgia,serif';c.fillText(title,350,450,490);}
     c.shadowBlur=0;c.shadowOffsetY=0;c.font='400 19px Georgia,serif';c.fillStyle='#d4be90';c.fillText(book.english.split(' / ')[0],350,760,470);
     c.strokeStyle='#baa071';c.beginPath();c.moveTo(284,703);c.lineTo(416,703);c.stroke();return canvas;
+  }
+  createInnerTexture(book,photo){
+    const canvas=document.createElement('canvas');canvas.width=700;canvas.height=910;const c=canvas.getContext('2d');
+    const paper=c.createLinearGradient(0,0,700,0);paper.addColorStop(0,'#bdae8e');paper.addColorStop(.09,'#e7d6ad');paper.addColorStop(.45,'#efe1c1');paper.addColorStop(1,'#d6c39a');c.fillStyle=paper;c.fillRect(0,0,700,910);
+    c.fillStyle='#5c4c32';c.textAlign='center';c.font='400 46px KaiTi,STKaiti,SimSun,serif';c.fillText(book.title,350,151,525);
+    const scale=Math.min(540/photo.naturalWidth,435/photo.naturalHeight),width=photo.naturalWidth*scale,height=photo.naturalHeight*scale;
+    c.drawImage(photo,(700-width)/2,240+(435-height)/2,width,height);
+    c.strokeStyle='#98815c';c.lineWidth=1;c.strokeRect((700-width)/2-8,240+(435-height)/2-8,width+16,height+16);
+    c.fillStyle='#776449';c.font='400 18px Georgia,serif';c.fillText(book.english.split(' / ')[0],350,750,520);
+    c.strokeStyle='#bba57d';c.beginPath();c.moveTo(270,792);c.lineTo(430,792);c.stroke();return canvas;
   }
   start(book,button,locationBook) {
     if(this.active)return false;
@@ -72,7 +84,7 @@ class BookJourneyController {
   requestFrame(){const generation=this.generation;this.raf=requestAnimationFrame(time=>{if(generation===this.generation)this.frame(time);});}
   clear(){
     ++this.generation;if(this.raf!=null)cancelAnimationFrame(this.raf);this.raf=null;this.active=null;this.library.busy=this.library.previewHeld=false;
-    this.card?.remove();this.card=null;this.bookPose=null;this.coverTexture=null;this.canvas.classList.remove('visible');this.context.clearRect(0,0,innerWidth,innerHeight);
+    this.card?.remove();this.card=null;this.bookPose=null;this.coverTexture=null;this.innerTexture=null;this.canvas.classList.remove('visible');this.context.clearRect(0,0,innerWidth,innerHeight);
     document.body.classList.remove('journey-active');document.body.dataset.journey='idle';
     document.querySelector('#libraryView').setAttribute('aria-busy','false');document.querySelector('#journeyStatus').textContent='';
   }
@@ -129,7 +141,9 @@ class BookJourneyController {
     const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#030812');sky.addColorStop(.5,'#10243b');sky.addColorStop(.8,'#567d9b');sky.addColorStop(1,'#b8cbd1');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
     ctx.translate(w/2,h/2);ctx.rotate(.16*(1-journeyRange(elapsed,2600,3500)));ctx.translate(-w/2,-h/2);
     for(let i=5;i>=0;i--){ctx.strokeStyle=`rgba(${i<2?'209,243,255':'90,164,241'},${i<2?.7:.08})`;ctx.lineWidth=2+i*8;ctx.beginPath();ctx.arc(cx,cy,radius-i*3,Math.PI,Math.PI*2);ctx.stroke();}
-    ctx.save();ctx.beginPath();ctx.arc(cx,cy,radius,Math.PI,Math.PI*2);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.clip();
+    // A complete planetary disk closes below the viewport. Closing a semicircle
+    // through screen corners creates a diagonal wedge once the camera rolls.
+    ctx.save();ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.closePath();ctx.clip();
     const earth=ctx.createLinearGradient(0,h*.4,0,h);earth.addColorStop(0,'#658b9a');earth.addColorStop(.4,'#274558');earth.addColorStop(1,'#101f30');ctx.fillStyle=earth;ctx.fillRect(-w,-h,w*3,h*3);
     this.drawCloudPlate(elapsed,journeyRange(elapsed,1700,2550)*.96,true);this.drawCloudLayers(elapsed,.11,true);ctx.restore();ctx.restore();
   }
@@ -146,7 +160,7 @@ class BookJourneyController {
     const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight)*zoom,width=image.naturalWidth*scale,height=image.naturalHeight*scale;
     ctx.save();ctx.globalAlpha*=opacity;
     // Generated cinematic cloud plate only; never represented as a destination photograph.
-    if(surface)ctx.drawImage(image,0,image.naturalHeight*.32,image.naturalWidth,image.naturalHeight*.68,-w*.30,h*.12,w*1.60,h*1.35);
+    if(surface)ctx.drawImage(image,0,image.naturalHeight*.32,image.naturalWidth,image.naturalHeight*.68,-w*.55,-h*.02,w*2.10,h*2.10);
     else ctx.drawImage(image,(w-width)/2,(h-height)/2+h*(.035-travel*.095),width,height);ctx.restore();
     this.canvas.dataset.cloudImage='ready';return true;
   }
@@ -184,10 +198,10 @@ class BookJourneyController {
       x-=(1-open)*w*.5;const rx=x*cy+z*sy,rz=-x*sy+z*cy,ry=y*cx-rz*sx,depth=y*sx+rz*cx,perspective=1100/(1100-depth);
       return {x:pose.x+(rx*cz-ry*sz)*perspective*pose.scale,y:pose.y+(rx*sz+ry*cz)*perspective*pose.scale,depth};
     };
-    const vertex=(x,y,angle,depth,bend=0)=>{const a=angle*rad;return project(x*Math.cos(a)+depth*Math.sin(a),y,-x*Math.sin(a)+depth*Math.cos(a)+Math.sin(x/w*Math.PI)*bend);};
+    const vertex=(x,y,angle,depth,bend=0)=>{const a=angle*rad,curl=Math.sin(x/w*Math.PI)*bend,asymmetry=Math.sin(y/h*Math.PI)*Math.pow(x/w,2)*bend*.23;return project(x*Math.cos(a)+depth*Math.sin(a),y+asymmetry,-x*Math.sin(a)+depth*Math.cos(a)+curl);};
     const face=(quad,kind,angle,index=0,extra={})=>{const value={quad,kind,angle,index,depth:quad.reduce((sum,p)=>sum+p.depth,0)/4,...extra};faces.push(value);return value;};
     const addSheet=(angle,depth,bend,kind,index=0)=>{
-      const segments=7,gradStart=vertex(0,-h/2,angle,depth,bend),gradEnd=vertex(w,h/2,angle,depth,bend);
+      const segments=kind==='cover'&&open<.08?1:7,gradStart=vertex(0,-h/2,angle,depth,bend),gradEnd=vertex(w,h/2,angle,depth,bend);
       for(let strip=0;strip<segments;strip++){const left=w*strip/segments,right=w*(strip+1)/segments;face([vertex(left,-h/2,angle,depth,bend),vertex(right,-h/2,angle,depth,bend),vertex(right,h/2,angle,depth,bend),vertex(left,h/2,angle,depth,bend)],kind,angle,index,{left:strip/segments,right:(strip+1)/segments,strip,segments,gradStart,gradEnd});}
       if(kind!=='paper')for(let edge=0;edge<4;edge++){
         const corners=[[0,-h/2],[w,-h/2],[w,h/2],[0,h/2]],a=corners[edge],b=corners[(edge+1)%4];
@@ -196,32 +210,45 @@ class BookJourneyController {
     };
     const right=-25*open,left=-151*open;
     addSheet(right,-15,0,'back');
-    // Thin independently curved folios fan into a horizontal V, never vertical CSS shutters.
-    const finalAngles=[-27,-29,-32,-38,-55,-82,-116,-139,-145,-148,-150];
-    for(let i=0;i<11;i++){
-      const fan=journeyRange(open,.04+i*.018,.94),regular=right+(left-right)*(i+1)/12*fan,settled=journeyRange(open,.58,1),angle=regular+(finalAngles[i]-regular)*settled;
-      addSheet(angle,-9+i*1.35,Math.sin(i/10*Math.PI)*w*.085*fan,'paper',i);
+    const addPageBlock=(angle,near,far)=>{
+      const corners=[[0,-h/2],[w,-h/2],[w,h/2],[0,h/2]];
+      for(let edge=0;edge<4;edge++)for(let band=0;band<6;band++){
+        const d0=far+(near-far)*band/6,d1=far+(near-far)*(band+1)/6,a=corners[edge],b=corners[(edge+1)%4];
+        face([vertex(...a,angle,d0),vertex(...b,angle,d0),vertex(...b,angle,d1),vertex(...a,angle,d1)],'page-edge',angle,band);
+      }
+    };
+    addPageBlock(right-3*open,-3,-13);addPageBlock(left+3*open,10,3);
+    // Two resting signatures and only two principal turning folios. Their fore
+    // edges curl asymmetrically instead of forming an empty rigid paper crown.
+    const finalAngles=[-29,-57,-119,-148],depths=[-2,1,4,8];
+    for(let i=0;i<4;i++){
+      const fan=journeyRange(open,.05+i*.045,.97),angle=finalAngles[i]*fan;
+      addSheet(angle,depths[i],(i===1?1:i===2?.74:.19)*w*.135*fan,'paper',i);
     }
-    addSheet(left,12,0,'cover');faces.sort((a,b)=>a.depth-b.depth);
+    addSheet(left,12,0,'cover');faces.sort((a,b)=>open<.08&&((a.kind==='cover')!==(b.kind==='cover'))?(a.kind==='cover'?1:-1):a.depth-b.depth);
     ctx.save();ctx.globalAlpha*=pose.alpha;
     // A displaced soft shadow grounds the volume without turning it into a neon rectangle.
     ctx.save();ctx.filter='blur(18px)';ctx.fillStyle='#02050965';ctx.beginPath();ctx.ellipse(pose.x+w*.02,pose.y+h*.44,w*.65*pose.scale,h*.10*pose.scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
     for(const f of faces){
-      const q=f.quad;ctx.beginPath();q.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
+      const q=f.quad,mid={x:q.reduce((v,p)=>v+p.x,0)/4,y:q.reduce((v,p)=>v+p.y,0)/4};ctx.beginPath();q.forEach((p,i)=>{const dx=p.x-mid.x,dy=p.y-mid.y,d=Math.max(1,Math.hypot(dx,dy)),x=p.x+dx/d*.35,y=p.y+dy/d*.35;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);});ctx.closePath();
       const gs=f.gradStart||q[0],ge=f.gradEnd||q[2],g=ctx.createLinearGradient(gs.x,gs.y,ge.x+.01,ge.y+.01);
-      if(f.kind==='paper'){const shade=Math.round(224+Math.sin((f.angle+90)*rad)*15);g.addColorStop(0,`rgb(${shade},${shade-14},${shade-38})`);g.addColorStop(.38,'#f1dfb6');g.addColorStop(1,'#b6a17a');}
+      if(f.kind==='paper'){const shade=Math.round(220+Math.sin((f.angle+90)*rad)*15);g.addColorStop(0,`rgb(${shade-15},${shade-28},${shade-51})`);g.addColorStop(.30,'#e4d2a8');g.addColorStop(.78,'#f0e0b9');g.addColorStop(1,'#b6a17a');}
+      else if(f.kind==='page-edge'){g.addColorStop(0,f.index%2?'#a69168':'#d8c49a');g.addColorStop(.4,'#e0cda7');g.addColorStop(1,f.index%2?'#baa478':'#f0d9ad');}
       else if(f.kind==='edge'){g.addColorStop(0,'#b2813c');g.addColorStop(.45,'#f3d895');g.addColorStop(1,'#7c542d');}
       else{g.addColorStop(0,'#c5a36b');g.addColorStop(.12,'#5e4934');g.addColorStop(1,'#33271f');}
       ctx.fillStyle=g;ctx.fill();ctx.strokeStyle=f.kind==='paper'?'#ffebbbc0':'#ffe0a1';ctx.lineWidth=f.kind==='paper'?.75:1.4;
       ctx.beginPath();ctx.moveTo(q[0].x,q[0].y);ctx.lineTo(q[1].x,q[1].y);ctx.moveTo(q[3].x,q[3].y);ctx.lineTo(q[2].x,q[2].y);if(f.strip===0){ctx.moveTo(q[0].x,q[0].y);ctx.lineTo(q[3].x,q[3].y);}if(f.strip===f.segments-1){ctx.moveTo(q[1].x,q[1].y);ctx.lineTo(q[2].x,q[2].y);}ctx.stroke();
       const winding=(q[1].x-q[0].x)*(q[3].y-q[0].y)-(q[1].y-q[0].y)*(q[3].x-q[0].x);
       if(f.kind==='cover'&&winding>0&&this.coverTexture)this.drawBookTexture(this.coverTexture,q,f.left,f.right);
+      if(f.kind==='paper'&&(f.index===0||f.index===3)&&winding>0&&this.innerTexture)this.drawBookTexture(this.innerTexture,q,f.left,f.right);
       if(f.kind==='paper'&&f.index%3===1){
         ctx.strokeStyle='#69553418';ctx.lineWidth=.45;
         for(let line=0;line<17;line++){const t=.20+line*.033;ctx.beginPath();ctx.moveTo(q[0].x+(q[3].x-q[0].x)*t,q[0].y+(q[3].y-q[0].y)*t);ctx.lineTo(q[1].x+(q[2].x-q[1].x)*t,q[1].y+(q[2].y-q[1].y)*t);ctx.stroke();}
       }
     }
-    ctx.restore();this.canvas.dataset.bookPitch=pose.pitch.toFixed(1);this.canvas.dataset.bookOpen=open.toFixed(4);this.canvas.dataset.bookGeometry='perspective-hardcover-fan';
+    const spineNear=project(0,h/2,2),spineFar=project(0,-h/2,2);
+    ctx.strokeStyle='#ffdda3';ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(spineFar.x,spineFar.y);ctx.quadraticCurveTo((spineFar.x+spineNear.x)/2-3,(spineFar.y+spineNear.y)/2,spineNear.x,spineNear.y);ctx.stroke();
+    ctx.restore();this.canvas.dataset.bookPitch=pose.pitch.toFixed(1);this.canvas.dataset.bookOpen=open.toFixed(4);this.canvas.dataset.bookGeometry='perspective-hardcover-fan';this.canvas.dataset.principalFolios='4';
   }
   drawBookAura(elapsed,amount){
     if(amount<=0)return;const ctx=this.context,w=innerWidth,h=innerHeight,cx=w*.52,cy=h*.56,t=(elapsed-4850)/1000;ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=amount;this.glow(cx,cy,Math.min(w,h)*.26,.26);

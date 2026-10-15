@@ -20,11 +20,18 @@ test('intro camera is finite, monotone in size and has no completion jump',()=>{
   for(let t=0;t<=4500;t+=10){const p=context.pose(t);assert.ok(p.scale>=last-1e-10);assert.ok(p.center>=.43&&p.center<=.54);assert.ok(p.reveal>=0&&p.reveal<=1);last=p.scale;}
   assert.equal(context.pose(4000).scale,context.pose(4500).scale);
 });
+test('the palm-stage sphere reaches hero scale early instead of staying tiny until the hand exits',()=>{
+  const final=context.pose(4000).scale;
+  assert.ok(context.pose(1500).scale>=final*.70);
+  assert.ok(context.pose(2000).scale>=final*.99);
+});
 test('reduced motion immediately shows the settled scene without a hand or camera animation',()=>{
   const p=context.pose(0,true);assert.equal(p.active,false);assert.equal(p.veil,0);assert.equal(p.hand,0);assert.equal(p.fist,0);assert.equal(p.unfurl,0);assert.equal(p.core,1);
 });
 test('nebula is a continuous GPU density volume, not CPU parallel ellipse strokes',async()=>{
   const shader=await readFile(new URL('./src/nebula-ring.js',import.meta.url),'utf8');
   assert.match(shader,/float fbm\(/);assert.match(shader,/foregroundMask/);assert.match(shader,/for\(int layer=0;layer<3;layer\+\+\)/);
+  assert.match(shader,/float h=\(float\(layer\)-1\.\)\*\.018/);
+  assert.doesNotMatch(shader,/sin\(radius\*|float strand=|\*\.105/);
   assert.doesNotMatch(source,/for\(let band=/);assert.doesNotMatch(source,/lineTo|stroke\(/);
 });
