@@ -1,7 +1,6 @@
 # Current scene media sources
 
 - Closed-fist, unfurling and open-hand poses and cinematic cloud sea: newly generated illustrative assets using the built-in image generator on 2026-10-15. Exact prompts and provenance are embedded and saved beside the PNG files in `assets/cosmos-v3/`. They are not documentary destination photography. The uploaded reference videos/photos are not redistributed.
-- Energy-sphere crater detail: [NASA SVS CGI Moon Kit](https://svs.gsfc.nasa.gov/4720), LROC 2048×1024 colour map. The opening stylizes this lunar texture in blue; the album mode retains the geographic Earth. It is not a documentary claim of an Earth energy phenomenon.
 - Player Latin font: [Manrope](https://github.com/google/fonts/tree/main/ofl/manrope), self-hosted under the SIL Open Font License; license in `assets/fonts/OFL-Manrope.txt`. Chinese labels use the installed Chinese sans face; editorial text uses the closest available traditional serif, not an assertion of identical source font.
 - Star sphere: [NASA/Goddard Space Flight Center Scientific Visualization Studio — Deep Star Maps](https://svs.gsfc.nasa.gov/3895/). Original 8192×4096 JPEG from https://svs.gsfc.nasa.gov/vis/a000000/a003800/a003895/starmap_8k.jpg . Catalogue-based visualization, not an instantaneous sky photograph. Display exposure and observation direction adjusted for legibility.
 - Geographic line layers: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL. Cached local city/coast/river/glacier/road geometry, not generated scenery or invented contour lines.

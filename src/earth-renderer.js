@@ -42,11 +42,7 @@ class EarthMeshRenderer {
       precision highp float;
       uniform sampler2D uEarth;
       uniform sampler2D uNight;
-      uniform sampler2D uMoon;
-      uniform float uEnergyStrength;
-      uniform float uEnergyCore;
-      uniform float uEnergyTime;
-      uniform float uEnergyReveal;
+      uniform float uReveal;
       uniform float uLayer;
       uniform float uPlanet;
       uniform float uAlpha;
@@ -73,7 +69,7 @@ class EarthMeshRenderer {
           float whiteness = min(surface.r, min(surface.g, surface.b));
           float cloud = smoothstep(0.66, 0.95, whiteness);
           cloud *= smoothstep(0.08, 0.2, vUV.y) * (1.0 - smoothstep(0.8, 0.92, vUV.y));
-          gl_FragColor = vec4(vec3(0.64, 0.77, 0.93) * (0.24 + daylight * 0.9), cloud * 0.23 * (1.0-uEnergyStrength));
+          gl_FragColor = vec4(vec3(0.64, 0.77, 0.93) * (0.24 + daylight * 0.9), cloud * 0.23 * uReveal);
           return;
         }
         float lightMask = smoothstep(0.035, 0.36, max(night.r, max(night.g, night.b)));
@@ -84,23 +80,9 @@ class EarthMeshRenderer {
         color += vec3(0.45, 0.66, 0.86) * specular * ocean * 0.22;
         float litLimb = pow(max(dot(normal.xy, normalize(vec2(0.62, 0.72))), 0.0), 2.5);
         color += vec3(0.46, 0.71, 1.0) * rim * (0.16 + litLimb * 2.2);
-        if(uEnergyStrength>.001){
-          vec3 moon=texture2D(uMoon,vUV).rgb;
-          float terrain=pow(dot(moon,vec3(.299,.587,.114)),.85);
-          float radial=length(normal.xy),angle=atan(normal.y,normal.x);
-          float turns=angle*2.0+log(radial+.13)*6.2-uEnergyTime*.62;
-          float spiral=pow(.5+.5*sin(turns),7.0)*exp(-radial*2.5);
-          float filaments=pow(.5+.5*sin(turns*1.5+sin(radial*18.0-uEnergyTime)*.5),12.0)*exp(-radial*2.4);
-          float nucleus=exp(-radial*radial*24.0);
-          float limb=pow(1.0-max(normal.z,0.0),2.8);
-          float facing=.43+.57*max(dot(normal,normalize(vec3(-.1,.5,1.0))),0.0);
-          vec3 energy=(vec3(.008,.036,.14)+vec3(.018,.27,.46)*terrain*1.5)*facing;
-          energy+=vec3(.035,.47,.75)*limb*.92;
-          energy+=uEnergyCore*(vec3(.05,.48,.92)*spiral*1.8+vec3(.16,.67,.93)*filaments*.8+vec3(.82,1.05,1.13)*nucleus*1.7);
-          energy+=uEnergyCore*vec3(.018,.11,.20)*exp(-radial*1.7);
-          color=mix(color,energy,uEnergyStrength);
-        }
-        gl_FragColor = vec4(color,mix(1.0,uEnergyReveal,uEnergyStrength));
+        // The hero remains geographic Earth throughout the opening and library.
+        // Reveal changes opacity only, never the continents, oceans or city lights.
+        gl_FragColor = vec4(color,uReveal);
       }
     `;
     const compile = (type, source) => {
@@ -150,7 +132,7 @@ class EarthMeshRenderer {
     this.planetIndexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.planetIndexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(planetIndices),gl.STATIC_DRAW);this.planetIndexCount=planetIndices.length;
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.earthIndexBuffer);
-    this.uniforms = Object.fromEntries(["uViewport", "uCenter", "uRadius", "uYaw", "uPitch", "uEarth", "uNight", "uMoon", "uEnergyStrength", "uEnergyCore", "uEnergyTime", "uEnergyReveal", "uLayer", "uTime", "uDepth", "uDepthRadius", "uPlanet", "uPalette", "uAlpha"]
+    this.uniforms = Object.fromEntries(["uViewport", "uCenter", "uRadius", "uYaw", "uPitch", "uEarth", "uNight", "uReveal", "uLayer", "uTime", "uDepth", "uDepthRadius", "uPlanet", "uPalette", "uAlpha"]
       .map(name => [name, gl.getUniformLocation(this.program, name)]));
     this.texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.texture);
@@ -161,12 +143,7 @@ class EarthMeshRenderer {
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clearColor(0, 0, 0, 0);
-    this.moonTexture=gl.createTexture();gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,this.moonTexture);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array([100,100,100]));
-    for(const key of [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T])gl.texParameteri(gl.TEXTURE_2D,key,gl.CLAMP_TO_EDGE);
-    for(const key of [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,key,gl.LINEAR);
-    this.moonImage=new Image();this.moonImage.onload=()=>{gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,this.moonTexture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,this.moonImage);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,this.texture);};
-    this.moonImage.src='assets/cosmos-v3/lunar-craters-2k.jpg';gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,this.texture);
+    this.canvas.dataset.centralBody='earth';
   }
 
   setTexture(image, nightImage) {
@@ -228,11 +205,7 @@ class EarthMeshRenderer {
     gl.uniform1f(this.uniforms.uPitch, globe.pitch);
     gl.uniform1i(this.uniforms.uEarth, 0);
     gl.uniform1i(this.uniforms.uNight, 1);
-    gl.uniform1i(this.uniforms.uMoon,2);
-    gl.uniform1f(this.uniforms.uEnergyStrength,globe.energyStrength??0);
-    gl.uniform1f(this.uniforms.uEnergyCore,globe.energyCore??0);
-    gl.uniform1f(this.uniforms.uEnergyTime,globe.energyTime??time/1000);
-    gl.uniform1f(this.uniforms.uEnergyReveal,globe.cosmicReveal??1);
+    gl.uniform1f(this.uniforms.uReveal,globe.cosmicReveal??1);
     gl.uniform1f(this.uniforms.uLayer, 0);
     gl.uniform1f(this.uniforms.uPlanet,0);
     gl.uniform1f(this.uniforms.uDepth,0);

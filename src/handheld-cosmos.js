@@ -5,15 +5,14 @@ function cosmicIntroPose(milliseconds,reducedMotion=false){
   const t=reducedMotion?4:Math.max(0,milliseconds/1000);
   const complete=t>=4;
   // The reference's sphere is already the hero above the palm by 1.5s.
-  // The remaining two seconds change its energy/core, not its basic legibility.
+  // The remaining two seconds reveal the surrounding bodies, not a new surface.
   const advance=cosmicSmooth(.66,1.92,t);
   return {seconds:Math.min(4,t),active:!complete,
-    phase:t<.35?'black':t<.9?'fist':t<1.45?'unfurl':t<2.15?'rise':t<3.05?'satellites':t<3.55?'vortex':t<4?'closeup':'complete',
+    phase:t<.35?'black':t<.9?'fist':t<1.45?'unfurl':t<2.15?'rise':t<3.05?'satellites':t<4?'closeup':'complete',
     veil:1-cosmicSmooth(.35,.78,t),
     reveal:cosmicSmooth(.62,1.04,t),
     scale:.20+.92*advance,
     center:.54-.11*cosmicSmooth(.8,2.2,t),
-    core:cosmicSmooth(2.60,3.75,t),
     formation:cosmicSmooth(.95,1.85,t),
     fist:cosmicSmooth(.39,.70,t)*(1-cosmicSmooth(.89,1.17,t)),
     unfurl:cosmicSmooth(.84,1.10,t)*(1-cosmicSmooth(1.19,1.46,t)),
@@ -77,7 +76,7 @@ class HandheldCosmos {
     this.pose=cosmicIntroPose(this.elapsed,g.reducedMotion);
     this.observerFit=cosmicObserverFit(g,this.pose.scale,this.pose.center);
     g.cosmicIntroActive=this.pose.active;g.cosmicIntroCenter=this.pose.center;g.cosmicIntroScale=this.pose.scale*this.observerFit;
-    g.cosmicReveal=this.pose.reveal;g.energyStrength=1-(g.libraryBlend??0);g.energyCore=this.pose.core;g.energyTime=g.reducedMotion?0:time/1000;
+    g.cosmicReveal=this.pose.reveal;
     this.applyPresentation();
   }
   applyPresentation(){

@@ -26,7 +26,7 @@ Preserve the original books, photographs and reader functions. Geographic overla
 
 Uploaded video references govern the supporting hand, luminous planetary rings, curved transparent player-style albums and cinematic book-entry sequence. Uploaded Hong Kong, Suzhou and Linyi works govern the restrained editorial-map projection. The exact reference font is unavailable; use the closest suitable face.
 
-The latest approved scope is real-time animation inside the website only, not an MP4 export. The four-second opening follows the supplied Word timeline: black, fist, unfurling palm, blue crater-textured energy sphere, rising satellites and a close-up luminous vortex with the hand leaving. Geographic Earth remains in the album-navigation mode. Curved players must have visibly bowed outlines and content, not merely rotated rectangular planes. Clicking an album performs a continuous golden-light flight through space, atmosphere and clouds before materializing and opening the same destination book.
+The latest approved scope is real-time animation inside the website only, not an MP4 export. The user's latest image correction takes precedence over the earlier Word sphere description: the central body is ALWAYS geographic Earth, including above the palm and during the opening, with real continents, oceans, clouds and city lights. Never replace it with a lunar crater texture, blue energy ball or central vortex. The four-second hand and satellite sequence is otherwise retained. Curved players must have visibly bowed outlines and content, not merely rotated rectangular planes. Clicking an album performs a continuous golden-light flight through space, atmosphere and clouds before materializing and opening the same destination book.
 
 ## Evidence on Hand
 
