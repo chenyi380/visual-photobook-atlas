@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-15T11:09:10Z",
+  "title": "Design System: World Travel Photobook Atlas",
+  "extensions": {
+    "colorMeta": {
+      "primary": {"role":"primary","displayName":"Nebula Cyan","tonalRamp":["oklch(15% .06 220)","oklch(27% .06 220)","oklch(39% .06 220)","oklch(51% .06 220)","oklch(63% .06 220)","oklch(75% .06 220)","oklch(87% .06 220)","oklch(95% .06 220)"]},
+      "nebula-indigo": {"role":"primary","displayName":"Orbital Indigo","tonalRamp":["oklch(15% .07 265)","oklch(27% .07 265)","oklch(39% .07 265)","oklch(51% .07 265)","oklch(63% .07 265)","oklch(75% .07 265)","oklch(87% .07 265)","oklch(95% .07 265)"]},
+      "space": {"role":"neutral","displayName":"Deep Space","tonalRamp":["oklch(15% .012 260)","oklch(27% .012 260)","oklch(39% .012 260)","oklch(51% .012 260)","oklch(63% .012 260)","oklch(75% .012 260)","oklch(87% .012 260)","oklch(95% .012 260)"]},
+      "player-ivory": {"role":"neutral","displayName":"Player Ivory","tonalRamp":["oklch(15% .015 85)","oklch(27% .015 85)","oklch(39% .015 85)","oklch(51% .015 85)","oklch(63% .015 85)","oklch(75% .015 85)","oklch(87% .015 85)","oklch(95% .015 85)"]},
+      "rim-ivory": {"role":"neutral","displayName":"Rim Ivory","tonalRamp":["oklch(15% .025 85)","oklch(27% .025 85)","oklch(39% .025 85)","oklch(51% .025 85)","oklch(63% .025 85)","oklch(75% .025 85)","oklch(87% .025 85)","oklch(95% .025 85)"]},
+      "editorial-ink": {"role":"neutral","displayName":"Editorial Ink","tonalRamp":["oklch(15% .025 180)","oklch(27% .025 180)","oklch(39% .025 180)","oklch(51% .025 180)","oklch(63% .025 180)","oklch(75% .025 180)","oklch(87% .025 180)","oklch(95% .025 180)"]},
+      "editorial-ivory": {"role":"neutral","displayName":"Editorial Ivory","tonalRamp":["oklch(15% .025 82)","oklch(27% .025 82)","oklch(39% .025 82)","oklch(51% .025 82)","oklch(63% .025 82)","oklch(75% .025 82)","oklch(87% .025 82)","oklch(95% .025 82)"]},
+      "reader-canvas": {"role":"neutral","displayName":"Reader Canvas","tonalRamp":["oklch(15% .035 80)","oklch(27% .035 80)","oklch(39% .035 80)","oklch(51% .035 80)","oklch(63% .035 80)","oklch(75% .035 80)","oklch(87% .035 80)","oklch(95% .035 80)"]},
+      "reader-paper": {"role":"neutral","displayName":"Reader Paper","tonalRamp":["oklch(15% .025 85)","oklch(27% .025 85)","oklch(39% .025 85)","oklch(51% .025 85)","oklch(63% .025 85)","oklch(75% .025 85)","oklch(87% .025 85)","oklch(95% .025 85)"]},
+      "reader-ink": {"role":"neutral","displayName":"Reader Ink","tonalRamp":["oklch(15% .020 245)","oklch(27% .020 245)","oklch(39% .020 245)","oklch(51% .020 245)","oklch(63% .020 245)","oklch(75% .020 245)","oklch(87% .020 245)","oklch(95% .020 245)"]},
+      "journey-gold": {"role":"secondary","displayName":"Journey Gold","tonalRamp":["oklch(15% .09 75)","oklch(27% .09 75)","oklch(39% .09 75)","oklch(51% .09 75)","oklch(63% .09 75)","oklch(75% .09 75)","oklch(87% .09 75)","oklch(95% .09 75)"]}
+    },
+    "tonalRampNote": "Tonal ramps are panel metadata synthesized for inspection; they are not additional implemented palette tokens.",
+    "typographyMeta": {
+      "title":{"displayName":"Player title","purpose":"Chinese album title projected onto the curved glass; bundled Manrope is the closest available reference match."},
+      "body":{"displayName":"Player destination label","purpose":"Smaller English title on the same curved surface."},
+      "label":{"displayName":"Interaction hint","purpose":"Quiet bottom-centred desktop and mobile interaction guidance."},
+      "editorial-title":{"displayName":"Photograph title","purpose":"Widely spaced serif annotation over the photograph's negative space."},
+      "editorial-caption":{"displayName":"Photograph place","purpose":"Compact serif place annotation; the approximate-area line is separately italic."},
+      "reader-title":{"displayName":"Reader title","purpose":"The selected original album's title in the preserved warm reading header."}
+    },
+    "shadows": [
+      {"name":"player-ambient","value":"drop-shadow(0 8px 14px rgb(0 0 0 / 28%))","purpose":"Continuous player shell only; never individual content strips."},
+      {"name":"player-focus","value":"drop-shadow(0 0 3px #fff2d7) drop-shadow(0 7px 14px rgb(0 0 0 / 28%))","purpose":"Visible keyboard focus on the continuous glass shell."},
+      {"name":"photograph-lift","value":"0 16px 48px #0008","purpose":"Lifts the unfiltered photographic projection above deep space."}
+    ],
+    "motion": [
+      {"name":"hand-opening","value":"4000ms","purpose":"Black, fist, unfurling palm, geographic Earth and satellites, followed by the hand leaving."},
+      {"name":"book-journey","value":"8000ms","purpose":"Live departure, space, atmosphere, clouds, destination, materialization and book opening."},
+      {"name":"reduced-journey","value":"220ms","purpose":"Short reading transition when reduced motion is requested; the hand sequence and ambient motion are skipped."},
+      {"name":"preview-release","value":"220ms","purpose":"Brief release delay before resuming the album orbit after the pointer or focus leaves."},
+      {"name":"player-rim-state","value":"200ms","purpose":"Glass surface opacity response to active state."}
+    ],
+    "breakpoints":[{"name":"mobile","value":"720px"}],
+    "materials": {
+      "playerGlass":"backdrop-filter: blur(5px) saturate(.82); one continuous SVG rim and 31 borderless projected content strips",
+      "playerRim":"linear gradient from #c7e1f1 through #fff5dc and #edcda9 to #e8d3f7; 1.3px normal, 1.8px active/focus",
+      "sky":"NASA/Goddard SVS 8K star catalogue image; opacity .27 in planet mode and .36 in album mode",
+      "mapFootprint":"Transparent real-data layers occupy negative space within 15–25%; current ten SVG metadata values are 18.7–23.5%",
+      "book":"Native perspective hardcover, visible page-edge blocks and four principal curved folios"
+    },
+    "componentAssets": {
+      "geographic-projection":["assets/covers-v2/nanchang-day.jpg","assets/travel-maps-v2/nanchang.svg"]
+    }
+  },
+  "components": [
+    {
+      "name":"Atlas mode switch","kind":"button","refersTo":"atlas-toggle","description":"Upper-right control between small planets and the album orbit.",
+      "html":"<button class=\"ds-atlas-toggle\" aria-expanded=\"false\">画册星环</button>",
+      "css":".ds-atlas-toggle{padding:9px 26px;border:1px solid #76a8e4;border-radius:28px;background:#03112666;color:#edf2f4;backdrop-filter:blur(18px);font:400 14px/1.2 SimSun,serif;letter-spacing:.12em;cursor:pointer;transition:background .3s,border-color .3s}.ds-atlas-toggle:hover,.ds-atlas-toggle[aria-expanded=true]{background:rgb(28 59 78 / 60%);border-color:rgb(156 215 245 / 64%)}.ds-atlas-toggle:focus-visible{outline:1px solid #dcefff;outline-offset:5px}"
+    },
+    {
+      "name":"Opening replay","kind":"button","refersTo":"intro-replay","description":"Quiet upper-left pill that replays the four-second hand and Earth opening.",
+      "html":"<button class=\"ds-replay\">重播开场</button>",
+      "css":".ds-replay{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid #8ea7c54d;border-radius:999px;background:#07111b80;color:#d2e6f6;font:11px/1.2 'Atlas Player Sans','Microsoft YaHei',sans-serif;letter-spacing:.06em;cursor:pointer}.ds-replay:hover{background:#162d4370;color:#fff}.ds-replay:focus-visible{outline:2px solid #c8e9ff;outline-offset:4px}"
+    },
+    {
+      "name":"Curved album player","kind":"custom","refersTo":"curved-player","description":"A compact native SVG specimen of the bowed glass player; the running atlas projects its native content across 31 strips.",
+      "html":"<button class=\"ds-player\" aria-label=\"阅读南昌画册\"><svg viewBox=\"0 0 236 138\" aria-hidden=\"true\"><defs><linearGradient id=\"ds-player-glass\" x2=\"1\" y2=\"1\"><stop stop-color=\"#eee6d4\" stop-opacity=\".22\"/><stop offset=\".48\" stop-color=\"#b7b4ac\" stop-opacity=\".13\"/><stop offset=\"1\" stop-color=\"#bba17d\" stop-opacity=\".22\"/></linearGradient><linearGradient id=\"ds-player-rim\" x2=\".95\" y2=\"1\"><stop stop-color=\"#c7e1f1\"/><stop offset=\".27\" stop-color=\"#fff5dc\"/><stop offset=\".72\" stop-color=\"#edcda9\"/><stop offset=\"1\" stop-color=\"#e8d3f7\"/></linearGradient><path id=\"ds-player-title-curve\" d=\"M22 29 Q118 46 214 29\"/><path id=\"ds-player-label-curve\" d=\"M22 49 Q118 66 214 49\"/></defs><path class=\"ds-player-surface\" d=\"M9 3Q118 28 227 3Q234 2 234 11L234 115Q234 126 226 127Q118 150 10 127Q2 126 2 116L2 12Q2 4 9 3Z\"/><text class=\"ds-player-title\"><textPath href=\"#ds-player-title-curve\">南昌</textPath></text><text class=\"ds-player-label\"><textPath href=\"#ds-player-label-curve\">NANCHANG</textPath></text><path class=\"ds-player-track\" d=\"M22 72Q118 88 214 72\"/><path class=\"ds-player-progress\" d=\"M22 72Q40 75 58 77\"/><text class=\"ds-player-page\" x=\"22\" y=\"91\">01</text><text class=\"ds-player-page\" x=\"201\" y=\"91\">10</text><circle cx=\"118\" cy=\"111\" r=\"16.7\" fill=\"#fff8e9\"/><path d=\"m114 103 12 8-12 8Z\" fill=\"#444640\"/><path d=\"M70 103v14m11-14-10 7 10 7M166 103v14m-11-14 10 7-10 7\" fill=\"#fff9ee\" stroke=\"#fff9ee\" stroke-width=\"1\"/></svg></button>",
+      "css":".ds-player{display:block;width:236px;height:138px;padding:0;border:0;background:transparent;color:#fff9ee;cursor:pointer;text-align:left}.ds-player svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 8px 14px rgb(0 0 0 / 28%))}.ds-player-surface{fill:url(#ds-player-glass);fill-opacity:.84;stroke:url(#ds-player-rim);stroke-width:1.3;stroke-opacity:.85;transition:fill-opacity .2s}.ds-player-title{fill:currentColor;font:550 16.756px 'Atlas Player Sans','Microsoft YaHei',sans-serif;letter-spacing:.035em}.ds-player-label{fill:#fff7e9;font:400 9.676px 'Atlas Player Sans','Microsoft YaHei',sans-serif;letter-spacing:.035em}.ds-player-track{fill:none;stroke:rgb(255 247 230 / 33%);stroke-width:1}.ds-player-progress{fill:none;stroke:#fff9e8;stroke-width:1}.ds-player-page{fill:#fff4e0;font:400 6.844px 'Atlas Player Sans',sans-serif;letter-spacing:.035em}.ds-player:hover .ds-player-surface,.ds-player:focus-visible .ds-player-surface{fill-opacity:1;stroke-width:1.8;stroke-opacity:1}.ds-player:focus-visible{outline:none}.ds-player:focus-visible svg{filter:drop-shadow(0 0 3px #fff2d7) drop-shadow(0 7px 14px rgb(0 0 0 / 28%))}"
+    },
+    {
+      "name":"Geographic photograph","kind":"custom","refersTo":"geographic-projection","description":"The project's existing Nanchang photograph and transparent OSM overlay; relative asset URLs resolve from the project root.",
+      "html":"<figure class=\"ds-projection\"><img class=\"ds-projection-photo\" src=\"assets/covers-v2/nanchang-day.jpg\" alt=\"南昌旅行景色\"><img class=\"ds-projection-map\" src=\"assets/travel-maps-v2/nanchang.svg\" alt=\"真实地理地图，标记为大致区域\"><figcaption><span>NANCHANG</span><small>China</small><em>Approximate area</em></figcaption><button class=\"ds-photo-expand\" aria-label=\"查看完整地理摄影\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6\"/></svg></button></figure>",
+      "css":".ds-projection{position:relative;width:360px;aspect-ratio:4/3;margin:0;border:0;border-radius:2px;overflow:hidden;background:none;box-shadow:0 16px 48px #0008;color:#263c3c}.ds-projection-photo,.ds-projection-map{position:absolute;inset:0;width:100%;height:100%;filter:none;opacity:1;transform:none}.ds-projection-photo{object-fit:contain}.ds-projection-map{object-fit:fill;pointer-events:none}.ds-projection figcaption{position:absolute;left:4.5%;top:6.3%;max-width:35%;font-family:Baskerville,Georgia,'Times New Roman',serif}.ds-projection figcaption span{display:block;font-size:10.2px;font-weight:400;line-height:1.3;letter-spacing:.205em}.ds-projection figcaption small{display:block;margin-top:3.6px;font-size:5.1px;line-height:1.55;letter-spacing:.12em}.ds-projection figcaption em{display:block;margin-top:5.4px;font-size:4.08px;letter-spacing:.055em}.ds-photo-expand{position:absolute;right:6px;top:6px;width:25px;height:25px;padding:5px;border:0;border-radius:3px;background:#17282b9c;color:#fff;opacity:0;cursor:pointer;transition:opacity .2s}.ds-photo-expand svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.2}.ds-projection:hover .ds-photo-expand,.ds-projection:focus-within .ds-photo-expand{opacity:1}.ds-photo-expand:focus-visible{outline:2px solid #fff3d8;outline-offset:3px}"
+    },
+    {
+      "name":"Reader return","kind":"button","refersTo":"reader-return","description":"The existing transparent return action on the warm reading header.",
+      "html":"<div class=\"ds-reader-header\"><button class=\"ds-reader-return\">← 返回画册星环</button></div>",
+      "css":".ds-reader-header{padding:12px 22px;border-bottom:1px solid rgb(43 48 41 / 22%);background:#f7eeda;color:#263039}.ds-reader-return{padding:10px 0;border:0;background:none;color:inherit;font:600 10px/1 'Atlas Player Sans','PingFang SC','Microsoft YaHei',sans-serif;letter-spacing:.08em;cursor:pointer}.ds-reader-return:focus-visible{outline:1px solid #dcefff;outline-offset:5px}"
+    }
+  ],
+  "narrative": {
+    "northStar":"The Hand-held Travel Cosmos",
+    "overview":"A miniature geographic Earth is the centre of this world. A human hand introduces its scale, while a broad, softly turbulent cyan and indigo nebula gives the surrounding space volume. Continents, oceans, clouds and city lights remain legible throughout the opening and album modes. The background is almost black, with a restrained NASA star catalogue image rather than a dense field of decorative particles.\n\nAlbums float as transparent, bowed players around Earth. Their warm ivory lettering and fine controls feel delicate against the cold space. Hovering reveals an editorial photograph with a small transparent geographic layer; entering an album carries that same destination into a golden flight and a tangible, opening book. The photographs and existing readers remain the content authority.",
+    "keyCharacteristics":["Geographic Earth, human scale and spacious deep black.","Soft cyan nebula volume with sparse, distant stars.","Three orbital tiers of continuously curved, warm glass players.","Unfiltered photography with restrained real geography and serif annotation.","Live cinematic transitions into the selected original photobook."],
+    "rules":[
+      {"name":"The Light Has a Place Rule","body":"Cyan belongs to the surrounding atmosphere and nebula; the central body remains geographic Earth in every scene mode.","section":"colors"},
+      {"name":"The Surface Carries Type Rule","body":"Player titles, progress lines and controls bend with the glass surface; text must not float on an independent flat rectangle.","section":"typography"},
+      {"name":"The Single Rim Rule","body":"The player has one uninterrupted glass boundary. Its projected content strips have no individual borders, fills or shadows.","section":"elevation"}
+    ],
+    "dos":["Do keep geographic Earth visible as Earth throughout the hand opening and album modes.","Do use one soft, irregular cyan and indigo nebula volume with restrained star brightness.","Do bend the entire player surface, including its type and progress line, inside one continuous rim.","Do preserve photograph colour, aspect ratio and original reader content.","Do keep real geographic overlays in negative space within the confirmed 15–25% footprint and label approximate areas honestly.","Do preserve Escape, keyboard focus and the 220ms reduced-motion journey alternative."],
+    "donts":["Don't substitute a cratered moon, blue energy ball or central vortex for Earth.","Don't replace the nebula with parallel ellipse strokes or separate luminous rails.","Don't give each projected content strip its own glass border or treat the player symbols as independent working buttons.","Don't tint, blur or stretch the original photograph to create the editorial map treatment.","Don't claim the closest available font is identical to the reference font, or that a photographic destination plate is a true aerial approach."]
+  }
+}
