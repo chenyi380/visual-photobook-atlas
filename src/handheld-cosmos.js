@@ -36,18 +36,28 @@ class HandheldCosmos {
     };
     // Continuous ribbons use a single inclined annulus. Small orbital particles are
     // sampled in its own plane; they are not random stars or planet-attached tails.
-    for(let band=0;band<22;band++){
-      const r=2.40+band*.034,phase=seconds*.035+band*.29;
-      const points=Array.from({length:181},(_,j)=>{const a=j*Math.PI*2/180;return cosmosPoint(a,r+.018*Math.sin(a*5+phase),.31+.018*Math.sin(band),-.18,g);});
-      const core=band%5===0,color=core?'rgba(75,185,255,.56)':'rgba(40,92,245,.18)';
-      for(const [ctx,near] of [[back,false],[front,true]])line(points,ctx,near,color,core?1.7:.7,core?9:3);
+    for(let band=0;band<25;band++){
+      const r=2.35+band*.035,phase=seconds*.12+band*.29;
+      const points=Array.from({length:181},(_,j)=>{const a=j*Math.PI*2/180;return cosmosPoint(a,r+.035*Math.sin(a*4+phase)+.018*Math.cos(a*9-phase),.31+.018*Math.sin(band),-.18,g);});
+      const core=band%5===0,color=core?'rgba(67,168,255,.40)':'rgba(27,77,241,.10)';
+      for(const [ctx,near] of [[back,false],[front,true]])line(points,ctx,near,color,core?4:2,core?22:12);
+    }
+    // Broad light packets drift within the annulus, rather than bright tails
+    // being attached to every planet. A thin cyan filament sits inside each glow.
+    for(let packet=0;packet<12;packet++){
+      const start=seconds*.11+packet*2.399963,r=2.40+(packet%6)*.117;
+      const points=Array.from({length:55},(_,j)=>{const a=start+j/54*(.38+(packet%4)*.14);return cosmosPoint(a,r+.026*Math.sin(a*5+seconds*.16),.31,-.18,g);});
+      for(const [ctx,near] of [[back,false],[front,true]]){
+        line(points,ctx,near,'rgba(35,121,255,.18)',11,28);
+        line(points,ctx,near,'rgba(90,204,255,.38)',1.4,10);
+      }
     }
     for(let i=0;i<420;i++){
       const a=i*2.399963+seconds*(.035+(i%5)*.004),r=2.38+((i*73)%419)/419*.89;
       const p=cosmosPoint(a,r,.31+(i%11-5)*.002,-.18,g),ctx=p.z>0?front:back;
       if(p.z>0&&this.occluded(p))continue;
       ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha*(.18+(i%7)*.07);ctx.fillStyle=i%11===0?'#e0f8ff':'#4c9dff';
-      const size=i%31===0?1.8:.40+(i%4)*.18;ctx.beginPath();ctx.arc(p.x,p.y,size,0,Math.PI*2);ctx.fill();ctx.restore();
+      const size=i%31===0?2:.40+(i%4)*.18;if(i%17===0){ctx.shadowBlur=7;ctx.shadowColor='#28a6ff';}ctx.beginPath();ctx.arc(p.x,p.y,size,0,Math.PI*2);ctx.fill();ctx.restore();
     }
     // Two restrained outer guides show that the navigation planets have distinct planes.
     for(const index of [7,9]){

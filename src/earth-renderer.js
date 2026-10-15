@@ -54,8 +54,8 @@ class EarthMeshRenderer {
         vec3 night = texture2D(uNight, vUV).rgb;
         vec3 sun = normalize(vec3(0.72, 0.68, -0.32));
         if(uPlanet>.5){
-          float bands=sin(vUV.y*100.+sin(vUV.x*37.)*1.8)*.10;
-          float terrain=sin(vUV.x*73.+sin(vUV.y*39.)*2.)*sin(vUV.y*59.)*.10;
+          float bands=sin(vUV.y*36.+sin(vUV.x*17.)*1.3)*.065;
+          float terrain=sin(vUV.x*73.+sin(vUV.y*39.)*2.)*sin(vUV.y*59.)*.09+sin(vUV.x*13.+vUV.y*19.)*.045;
           vec3 planet=uPalette*(.83+bands+terrain);
           // Presentation fill light keeps these navigation objects readable against the sky.
           float shade=.60+max(dot(normal,sun),0.)*.84;

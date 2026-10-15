@@ -6,6 +6,7 @@
   outline-offset:8px;
   -webkit-tap-highlight-color:transparent;
 }
+.orbital-book[data-player="travel"]::before{display:none;}
 .orbital-book[data-player="travel"]:focus-visible {
   outline:1px solid #fff0d5;
   border-radius:12px;
