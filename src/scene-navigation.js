@@ -2,7 +2,7 @@
 function sceneNavigationPose(progress,planetRadius,bookRadius) {
   const p=clamp(progress,0,1),t=clamp((p-.22)/.78,0,1);
   const blend=t*t*(3-2*t),zoom=1+.24*Math.min(p/.22,1)*(1-blend);
-  return {progress:p,blend,zoom,radius:(planetRadius+(bookRadius-planetRadius)*blend)*zoom,center:.50+.10*blend};
+  return {progress:p,blend,zoom,radius:(planetRadius+(bookRadius-planetRadius)*blend)*zoom,center:.43+.11*blend};
 }
 class SceneNavigationController {
   constructor(globe,library,onMode,blocked) {
@@ -40,16 +40,23 @@ class SceneNavigationController {
   }
 }
 
-// Actual tilted circles viewed through one perspective camera, not screen ellipses.
+// Three levels on one cylinder share a camera and angular velocity. The offsets
+// belong to the orbital planes, not to an independent screen-space bobbing effect.
+function bookOrbitTier(index,globe) {
+  const mobile=globe.width<720;
+  const tiers=[1,0,1,0,1,2,2,2,0,1];
+  const tier=tiers[index]??1;
+  return {tier,radius:mobile?globe.width*.295:Math.min(globe.width*.335,globe.height*.64),
+    altitude:(tier-1)*globe.height*(mobile?.145:.19),tilt:(mobile?10:7)*Math.PI/180};
+}
+// Actual three-dimensional circles viewed through one perspective camera.
 function bookOrbitPoint(index,angle,globe) {
-  const mobile=globe.width<720,inner=index===0;
-  const radius=globe.width*(mobile?(inner?.205:.34):(inner?.275:.405));
-  const tilt=(inner?10:mobile?55:18)*Math.PI/180,camera=globe.width*3;
+  const {tier,radius,altitude,tilt}=bookOrbitTier(index,globe),camera=globe.width*3;
   const z=radius*Math.cos(angle)*Math.cos(tilt),perspective=camera/(camera-z);
   const zoom=globe.sceneZoom??1;
   return {x:globe.centerX+Math.sin(angle)*radius*perspective*zoom,
-    y:globe.restCenterY+Math.cos(angle)*radius*Math.sin(tilt)*perspective*zoom,
-    z,depth:Math.cos(angle),perspective,worldRadius:radius};
+    y:globe.restCenterY+(altitude+Math.cos(angle)*radius*Math.sin(tilt))*perspective*zoom,
+    z,depth:Math.cos(angle),perspective,worldRadius:radius,tier,altitude};
 }
 function dampedOrbitStep(speed,target,delta,tau=100) {
   const decay=Math.exp(-delta/tau);

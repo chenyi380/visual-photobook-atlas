@@ -58,7 +58,7 @@ class EarthMeshRenderer {
           float terrain=sin(vUV.x*73.+sin(vUV.y*39.)*2.)*sin(vUV.y*59.)*.10;
           vec3 planet=uPalette*(.83+bands+terrain);
           // Presentation fill light keeps these navigation objects readable against the sky.
-          float shade=.46+max(dot(normal,sun),0.)*.82;
+          float shade=.60+max(dot(normal,sun),0.)*.84;
           gl_FragColor=vec4(planet*shade+uPalette*pow(1.-max(normal.z,0.),4.)*.20,uAlpha);
           return;
         }
@@ -119,9 +119,16 @@ class EarthMeshRenderer {
       gl.enableVertexAttribArray(location);
       gl.vertexAttribPointer(location, count, gl.FLOAT, false, 20, offset);
     }
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+    this.earthIndexBuffer=gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.earthIndexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
     this.indexCount = indices.length;
+    // Tiny navigation planets need a smooth silhouette, not Earth's 57k triangles.
+    const planetIndices=[];
+    for(let row=0;row<rows;row+=8)for(let column=0;column<columns;column+=8){const a=row*(columns+1)+column,b=a+8*(columns+1);planetIndices.push(a,b,a+8,a+8,b,b+8);}
+    this.planetIndexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.planetIndexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(planetIndices),gl.STATIC_DRAW);this.planetIndexCount=planetIndices.length;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.earthIndexBuffer);
     this.uniforms = Object.fromEntries(["uViewport", "uCenter", "uRadius", "uYaw", "uPitch", "uEarth", "uNight", "uLayer", "uTime", "uDepth", "uDepthRadius", "uPlanet", "uPalette", "uAlpha"]
       .map(name => [name, gl.getUniformLocation(this.program, name)]));
     this.texture = gl.createTexture();
@@ -211,6 +218,7 @@ class EarthMeshRenderer {
 
   drawPlanets(globe,time){
     const gl=this.gl,colors=[[.91,.42,.30],[.20,.62,.80],[.59,.42,.79],[.95,.66,.30],[.25,.70,.51],[.43,.56,.88],[.86,.44,.63],[.77,.63,.45],[.32,.76,.73],[.60,.68,.79]];
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.planetIndexBuffer);
     gl.uniform1f(this.uniforms.uLayer,0);gl.uniform1f(this.uniforms.uPlanet,1);
     gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
     for(const planet of globe.planetMeshes??[]){
@@ -218,9 +226,9 @@ class EarthMeshRenderer {
       gl.uniform1f(this.uniforms.uDepth,planet.z);gl.uniform1f(this.uniforms.uDepthRadius,planet.physicalRadius);
       gl.uniform1f(this.uniforms.uYaw,time*.00017+planet.index);gl.uniform1f(this.uniforms.uPitch,planet.index*.23);
       gl.uniform3f(this.uniforms.uPalette,...colors[planet.index]);gl.uniform1f(this.uniforms.uAlpha,planet.alpha);
-      gl.drawElements(gl.TRIANGLES,this.indexCount,gl.UNSIGNED_SHORT,0);
+      gl.drawElements(gl.TRIANGLES,this.planetIndexCount,gl.UNSIGNED_SHORT,0);
     }
-    gl.disable(gl.BLEND);gl.uniform1f(this.uniforms.uPlanet,0);
+    gl.disable(gl.BLEND);gl.uniform1f(this.uniforms.uPlanet,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.earthIndexBuffer);
     globe.canvas.dataset.planetRenderer='webgl-spheres';
   }
 }

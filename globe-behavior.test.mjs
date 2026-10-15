@@ -223,7 +223,7 @@ test('curved books use tangent strips; photo projections retain aspect and do no
   assert.doesNotMatch(controller,/projectionMap'\)\.src = ATLAS_HOLOGRAM_MAPS/);
   const bundle=await readFile(new URL('system.js',root),'utf8');
   const meta=JSON.parse(bundle.match(/const ATLAS_TRAVEL_PHOTOS = (.*);\n/)?.[1]);
-  for(const [id,m] of Object.entries(meta)){assert.ok(m.ratio>1);assert.equal(m.approximate,true);const svg=await readFile(new URL(m.map,root),'utf8');assert.match(svg,/fill="#be4e43"/);assert.doesNotMatch(svg,/<rect[^>]*fill="#/);}
+  for(const [id,m] of Object.entries(meta)){assert.ok(m.ratio>1);assert.equal(m.approximate,true);const svg=await readFile(new URL(m.map,root),'utf8');assert.ok(svg.includes('fill="#b84737"'),id+' red approximate marker');assert.doesNotMatch(svg,/<rect[^>]*fill="#/);}
 });
 
 test('editorial maps include true street detail, red position, compass and kilometre scale', async()=>{
@@ -270,38 +270,53 @@ test('wheel reveal starts with uniform scene magnification and reverses continuo
 test('book depth uses one perspective camera and orbit speed is frame-rate independent',()=>{
   const {bookOrbitPoint:point,dampedOrbitStep:step}=context.sceneTools,globe=mockGlobe();
   const front=point(5,0,globe),back=point(5,Math.PI,globe);
-  assert.ok(front.perspective>1&&back.perspective<1);assert.ok(front.y>globe.restCenterY&&back.y<globe.restCenterY);
+  assert.ok(front.perspective>1&&back.perspective<1);assert.ok(front.y>back.y);
   for(let angle=0;angle<6.3;angle+=.1){const p=point(5,angle,globe);assert.ok(Number.isFinite(p.x+p.y+p.z));}
   const run=dt=>{let speed=.000045,angle=0;for(let t=0;t<800;t+=dt){const s=step(speed,0,dt);speed=s.speed;angle+=s.angle;}return {speed,angle};};
   const a=run(16),b=run(40);assert.ok(Math.abs(a.angle-b.angle)<1e-10);assert.ok(a.speed<2e-8);
 });
 
-test('geographic projection is native-aspect full-sky detail, not a tiny inset or country silhouette',async()=>{
+test('geographic projection preserves aspect with readable 15–25% real negative-space map',async()=>{
   const bundle=await readFile(new URL('system.js',root),'utf8');
   const meta=JSON.parse(bundle.match(/const ATLAS_TRAVEL_PHOTOS = (.*);\n/)?.[1]);
   for(const [id,m] of Object.entries(meta)){
     const svg=await readFile(new URL(m.map,root),'utf8');
     const h=Number(svg.match(/viewBox="0 0 1200 ([\d.]+)"/)[1]);assert.ok(Math.abs(1200/h-m.ratio)<.001);
-    assert.equal(m.mapExtent,'full-sky');assert.ok(m.marker[0]>.5&&m.marker[1]<.25);
-    assert.match(svg,/data-geography="local-osm"/);assert.match(svg,/fill="#e6e8df" fill-opacity=".40"/);
+    assert.equal(m.mapExtent,'negative-space');assert.ok(m.mapCoverage>=.15&&m.mapCoverage<=.25);
+    assert.ok(m.marker[0]>=0&&m.marker[0]<=1&&m.marker[1]>=0&&m.marker[1]<=1);assert.ok(m.scaleKm>0);
+    assert.ok(svg.includes('data-geography="local-osm"'));assert.ok(!svg.includes('fill="#e6e8df" fill-opacity=".40"'));
+    assert.ok(svg.includes('>N</text>')&&(/ km<| m</).test(svg));
     assert.ok((svg.match(/<path/g)||[]).length>30,id);assert.doesNotMatch(svg,/NaN|Infinity|undefined/);
   }
   const css=await readFile(new URL('system.css',root),'utf8');assert.match(css,/\.projection-map\{inset:0;width:100%;height:100%;object-fit:fill;opacity:1/);
 });
 
-test('journey completes once after flight and tunnel; Escape cancels and reduced motion is short',async()=>{
+test('cinematic journey crosses space, atmosphere, cloud sea and opening before reader; cancellation is safe',async()=>{
   const journeySource=await readFile(new URL('src/book-journey.js',root),'utf8');
   vm.runInContext(journeySource+'\nthis.journeyTools={journeyPhase,journeyCurve,BookJourneyController};',context);
   const {journeyPhase:phase,journeyCurve:curve,BookJourneyController:Journey}=context.journeyTools;
-  assert.equal(phase(0).phase,'flight');assert.equal(phase(1049).phase,'flight');assert.equal(phase(1050).phase,'tunnel');assert.equal(phase(2450).phase,'opening');assert.equal(phase(2800).phase,'complete');
+  for(const [time,expected] of [[0,'departure'],[699,'departure'],[700,'space'],[2050,'atmosphere'],[3350,'clouds'],[4800,'destination'],[6000,'materialize'],[7250,'opening'],[9599,'opening'],[9600,'complete']])assert.equal(phase(time).phase,expected);
+  let lastProgress=0;for(let time=0;time<=9700;time+=17){const s=phase(time);assert.ok(s.totalProgress>=lastProgress&&s.totalProgress<=1);assert.ok(s.progress>=0&&s.progress<=1);lastProgress=s.totalProgress;}
   assert.equal(phase(219,true).phase,'opening');assert.equal(phase(220,true).phase,'complete');
   assert.deepEqual(JSON.parse(JSON.stringify(curve({x:10,y:20},{x:90,y:70},1,720))),{x:90,y:70});
-  const gradient={addColorStop(){}},ctx=new Proxy({}, {get:(o,key)=>o[key]??(key.startsWith('create')?()=>gradient:()=>{}),set:(o,key,value)=>(o[key]=value,true)});
-  context.innerWidth=1280;context.innerHeight=720;context.requestAnimationFrame=()=>{};
-  context.document.body.dataset={};context.ATLAS_TRAVEL_PHOTOS={nanchang:{marker:[.6,.17]}};
+  const gradient={addColorStop(){}},ctx=new Proxy({globalAlpha:1}, {get:(o,key)=>o[key]??(key.startsWith('create')?()=>gradient:()=>{}),set:(o,key,value)=>(o[key]=value,true)});
+  const frames=[],cancelledFrames=[];context.innerWidth=1280;context.innerHeight=720;context.devicePixelRatio=1;context.requestAnimationFrame=callback=>frames.push(callback);context.cancelAnimationFrame=id=>cancelledFrames.push(id);context.clearTimeout=()=>{};
+  context.document.body.dataset={};context.document.body.classList.add=()=>{};context.document.body.classList.remove=()=>{};
+  context.ATLAS_TRAVEL_PHOTOS={nanchang:{marker:[.6,.17]}};context.ATLAS_PROJECTION_IMAGES={nanchang:'assets/nanchang-photo.jpg'};context.ATLAS_BOOK_IMAGES={nanchang:'assets/nanchang-cover.jpg'};
+  context.Image=class{constructor(){this.complete=true;this.naturalWidth=1672;this.naturalHeight=941;}};
   let opens=0,cancels=0;
-  const make=()=>Object.assign(Object.create(Journey.prototype),{active:{start:0,book:books[0],origin:{x:450,y:500}},globe:mockGlobe(),context:ctx,canvas:{dataset:{}},card:{style:{}},projection:{getBoundingClientRect:()=>({x:300,y:20,width:600,height:450})},clear(){this.active=null;},onComplete(){opens++;},onCancel(){cancels++;}});
-  const travel=make();for(const time of [0,1000,1500,2450,2799]){travel.frame(time);assert.equal(opens,0);}
-  travel.frame(2800);travel.frame(3000);assert.equal(opens,1);
-  const cancel=make();assert.equal(cancel.cancel(),true);cancel.frame(3000);assert.equal(opens,1);assert.equal(cancels,1);assert.equal(cancel.cancel(),false);
+  const make=()=>{
+    const style={setProperty(name,value){this[name]=value;}},leaves=Array.from({length:5},()=>({style:{setProperty(){}}}));
+    return Object.assign(Object.create(Journey.prototype),{active:{start:0,book:books[0],origin:{x:450/1280,y:500/720},target:{x:.6,y:.17},sourceWidth:220,photo:new context.Image()},generation:1,imageCache:new Map(),globe:mockGlobe(),library:{busy:true,previewHeld:true},context:ctx,ratio:1,bookWidth:230,cloudSea:new context.Image(),cloudSprites:Array.from({length:5},()=>({})),canvas:{dataset:{},classList:{add(){},remove(){}}},card:{style,querySelectorAll:()=>leaves,remove(){}},projection:{getBoundingClientRect:()=>({x:300,y:20,width:600,height:450})},onComplete(){opens++;},onCancel(){cancels++;}});
+  };
+  const travel=make();for(const time of [0,699,700,1500,2050,2800,3350,4100,4800,5999,6000,6750,7250,8500,9599]){travel.frame(time);assert.equal(opens,0);}
+  assert.equal(travel.canvas.dataset.cloudImage,'ready');assert.equal(travel.canvas.dataset.destinationImage,'ready');assert.ok(Number(travel.canvas.dataset.totalProgress)>.99);
+  travel.frame(9600);travel.frame(9800);assert.equal(opens,1);assert.equal(travel.library.busy,false);assert.equal(context.document.body.dataset.journey,'idle');assert.ok(cancelledFrames.length>0);
+  const cancel=make();assert.equal(cancel.cancel(),true);cancel.frame(9600);assert.equal(opens,1);assert.equal(cancels,1);assert.equal(cancel.cancel(),false);
+  const reduced=make();reduced.globe.reducedMotion=true;reduced.frame(219);assert.equal(opens,1);reduced.frame(220);assert.equal(opens,2);
+  const start=make();start.active=null;start.makeBook=()=>{};const button={getBoundingClientRect:()=>({x:340,y:450,width:220,height:100})};
+  assert.equal(start.start(books[0],button,books[0]),true);assert.equal(start.start(books[0],button,books[0]),false,'repeat clicks cannot start a second animation');
+  assert.equal(start.active.target.x,660/1280);assert.equal(start.active.target.y,96.5/720);
+  start.projection.getBoundingClientRect=()=>({x:0,y:0,width:1,height:1});assert.equal(start.active.target.x,660/1280,'flight endpoint remains the captured red marker');
+  assert.equal(start.loadPhoto(books[0]),start.loadPhoto(books[0]),'destination images are cached');start.cancel();
 });

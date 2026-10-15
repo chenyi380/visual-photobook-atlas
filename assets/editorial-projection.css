@@ -1,0 +1,111 @@
+/* Photo-first geographic editorial treatment; the underlying image is untouched. */
+.memory-projection {
+  --editorial-ink:#263c3c;
+  border:0;
+  border-radius:2px;
+  background:none;
+  box-shadow:0 16px 48px #0008;
+  overflow:hidden;
+}
+.memory-projection .projection-image,
+.memory-projection .projection-map {
+  inset:0;
+  width:100%;
+  height:100%;
+  margin:0;
+  opacity:1;
+  filter:none;
+  transform:none;
+}
+.memory-projection .projection-image img,
+.memory-projection[data-book="nanchang"] .projection-image img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+  opacity:1;
+  filter:none;
+  transform:none;
+}
+.memory-projection .projection-image::before,
+.memory-projection .projection-image::after {display:none;content:none;}
+.memory-projection .projection-map {object-fit:fill;}
+.memory-projection figcaption {
+  inset:6.3% auto auto 4.5%;
+  max-width:35%;
+  padding:0;
+  background:none;
+  color:var(--editorial-ink);
+  text-shadow:none;
+}
+.memory-projection figcaption span {
+  display:block;
+  margin:0;
+  color:inherit;
+  font-family:Baskerville,Georgia,'Times New Roman',serif;
+  font-size:calc(17px * var(--projection-unit,1));
+  font-weight:400;
+  line-height:1.3;
+  letter-spacing:.205em;
+  text-wrap:balance;
+  white-space:normal;
+}
+.memory-projection figcaption small {
+  display:block;
+  margin-top:calc(6px * var(--projection-unit,1));
+  color:inherit;
+  font-family:Baskerville,Georgia,'Times New Roman',serif;
+  font-size:calc(8.5px * var(--projection-unit,1));
+  font-style:normal;
+  font-weight:400;
+  line-height:1.55;
+  letter-spacing:.12em;
+  white-space:normal;
+}
+.memory-projection figcaption .projection-coordinates {
+  font-size:calc(6.8px * var(--projection-unit,1))!important;
+  font-style:italic!important;
+  letter-spacing:.055em!important;
+  margin-top:calc(9px * var(--projection-unit,1));
+}
+.memory-projection figcaption ol {display:none;}
+.memory-projection[data-book="dune-notes"],
+.memory-projection[data-book="earth-city"],
+.memory-projection[data-tone="ivory"] {--editorial-ink:#f1e7d4;}
+.memory-projection[data-book="lava-field"] figcaption,
+.memory-projection[data-book="dune-notes"] figcaption,
+.memory-projection[data-book="earth-city"] figcaption,
+.memory-projection[data-book="lava-field"] figcaption small,
+.memory-projection[data-book="dune-notes"] figcaption small,
+.memory-projection[data-book="earth-city"] figcaption small {color:var(--editorial-ink);}
+.memory-projection[data-book="morocco"] figcaption {--editorial-ink:#243b3a;}
+.memory-projection .projection-credits {
+  left:1.25%;
+  right:1.25%;
+  bottom:1.1%;
+  gap:4%;
+  font-size:calc(5.8px * var(--projection-unit,1));
+  line-height:1.3;
+  color:#fff;
+  text-shadow:0 1px 2px #000;
+}
+.memory-projection .projection-credits a {text-decoration:none;text-underline-offset:.18em;}
+.memory-projection .projection-credits a:hover {text-decoration:underline;}
+.memory-projection .photo-expand {
+  top:6px;
+  right:6px;
+  border:0;
+  background:#17282b9c;
+  color:#fff;
+  border-radius:3px;
+}
+.memory-projection .photo-expand:focus-visible,
+.memory-projection .projection-credits a:focus-visible {outline:2px solid #fff3d8;outline-offset:3px;}
+.memory-projection.photo-expanded {border:0;border-radius:0;box-shadow:none;}
+.memory-projection.photo-expanded figcaption span {font-size:2.8333cqw!important;}
+.memory-projection.photo-expanded figcaption small {font-size:1.4167cqw!important;}
+.memory-projection.photo-expanded figcaption .projection-coordinates {font-size:1.1333cqw!important;}
+.memory-projection.photo-expanded .projection-credits {font-size:.9667cqw;}
+@media (prefers-reduced-motion:reduce) {
+  .memory-projection {transition:none!important;}
+}

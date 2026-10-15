@@ -157,13 +157,13 @@ class StarGlobe {
     this.meshRenderer?.resize(this.width, this.height, ratio);
     this.skyRenderer?.resize(this.width,this.height,ratio);
     this.centerX = this.width * .5;
-    this.restCenterY = this.height * (this.libraryOpened ? (this.width < 720 ? .60 : .60) : .50);
+    this.restCenterY = this.height * (this.libraryOpened ? .54 : .43);
     this.centerY = this.restCenterY;
     this.bookRadius = this.width < 720
       ? Math.min(this.width * .27, this.height * .21, 260)
-      : Math.min(this.width * .18, this.height * .275, 520);
-    this.planetBaseUnit = this.planetUnit = fitPlanetUnit(this.width,this.height);
-    this.planetRadius=this.planetUnit*1.24;
+      : Math.min(this.width * .18, this.height * .24, 520);
+    this.planetRadius=Math.min(this.width*.17,this.height*.225);
+    this.planetBaseUnit = this.planetUnit = this.planetRadius/1.24;
     this.baseRadius = this.targetRadius = this.libraryOpened ? this.bookRadius : this.planetRadius;
     this.prepareSphereGrid();
   }
@@ -171,7 +171,7 @@ class StarGlobe {
   setLibraryMode(opened) {
     this.libraryOpened=opened;
     this.targetRadius=opened ? this.bookRadius : this.planetRadius;
-    this.restCenterY=this.height*(opened ? .60 : .50);
+    this.restCenterY=this.height*(opened ? .54 : .43);
   }
 
 

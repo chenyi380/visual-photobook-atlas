@@ -6,7 +6,11 @@
   <meta name="description" content="在旋转地球与星空之间，探索十本旅行画册与它们的记忆坐标。">
   <title>世界视觉档案 · AI 画册系统</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23f4ead3'/%3E%3Ccircle cx='32' cy='32' r='22' fill='%2335556b'/%3E%3Cpath d='M10 33c9-8 18-4 25-13 4 7 11 10 19 9v12c-9-3-16-1-22 7-5-8-13-8-22-4z' fill='%23ad563f'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="system.css?v=20261014-journey4">
+  <link rel="stylesheet" href="system.css?v=20261015-cosmos1">
+  <link rel="stylesheet" href="assets/cosmos-scene.css?v=20261015-cosmos1">
+  <link rel="stylesheet" href="assets/orbit-players.css?v=20261015-cosmos1">
+  <link rel="stylesheet" href="assets/editorial-projection.css?v=20261015-cosmos1">
+  <link rel="stylesheet" href="assets/book-journey.css?v=20261015-cosmos1">
 </head>
 <body>
   <main class="atlas-shell" id="libraryView">
@@ -15,6 +19,7 @@
         <canvas id="spaceCanvas" aria-hidden="true"></canvas>
         <canvas id="skyCanvas" aria-hidden="true"></canvas>
         <canvas id="orbitCanvas" aria-hidden="true"></canvas>
+        <img id="supportingHand" class="supporting-hand" src="assets/cosmos-v3/supporting-hand.png" alt="" aria-hidden="true">
         <canvas id="earthCanvas" aria-hidden="true"></canvas>
         <canvas id="effectsCanvas" aria-hidden="true"></canvas>
         <button id="globeControl" class="globe-control" aria-label="拖动地球旋转，方向键调整方向" title="拖动地球旋转"></button>
@@ -26,8 +31,8 @@
           <path id="projectionLine" fill="none" stroke="#b8e4ff" stroke-opacity=".72" stroke-width="1"/>
         </svg>
         <figure class="memory-projection" id="memoryProjection" aria-hidden="true">
-          <div class="projection-image"><img id="projectionImage" alt=""></div>
-          <img class="projection-map" id="projectionMap" alt="">
+          <div class="projection-image"><img id="projectionImage" src="assets/covers-v2/nanchang-day.jpg" alt=""></div>
+          <img class="projection-map" id="projectionMap" src="assets/travel-maps-v2/nanchang.svg" alt="">
           <figcaption><span id="projectionTitle"></span><small id="projectionPlace"></small><ol id="projectionLandmarks"></ol><small id="projectionCoordinates" class="projection-coordinates"></small></figcaption>
           <div class="projection-credits"><a id="projectionCredit" target="_blank" rel="noopener"></a><small id="projectionMapCredit"></small></div>
           <button id="openTravelPhoto" class="photo-expand" aria-label="查看完整地理摄影" title="查看完整地理摄影"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/></svg></button>
@@ -39,10 +44,7 @@
         <span>画册星环</span>
       </button>
 
-      <div class="hero-copy">
-        <p class="eyebrow">MEMORY ATLAS · ORBITING ARCHIVE</p>
-        <h1 id="atlas-title"><span>把世界收进</span><em>一排书脊</em></h1>
-      </div>
+      <h1 class="atlas-accessible-title" id="atlas-title">世界旅行画册</h1>
 
       <div class="earth-interface" aria-hidden="true">
         <p><span>EARTH / MEMORY COORDINATES</span><b id="locationReadout">AUTO ORBIT</b></p>
@@ -66,6 +68,6 @@
 
   <dialog id="travelPhotoDialog" aria-label="完整地理摄影预览"><button id="closeTravelPhoto" class="photo-close" aria-label="关闭地理摄影预览">×</button><div id="travelPhotoContent"></div></dialog>
   <canvas id="journeyCanvas" aria-hidden="true"></canvas>
-  <script src="system.js?v=20261014-journey4"></script>
+  <script src="system.js?v=20261015-cosmos1"></script>
 </body>
 </html>

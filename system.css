@@ -1,4 +1,4 @@
-:root { --ink:#edf2f4; --red:#dd8769; --ice:#9cd7f4; --space:#010309; --serif:"Songti SC","STSong","Noto Serif CJK SC",Georgia,serif; --sans:Inter,"PingFang SC","Microsoft YaHei",sans-serif; }
+:root { --ink:#edf2f4; --red:#dd8769; --ice:#9cd7f4; --space:#010309; --serif:"Songti SC","STSong","Noto Serif CJK SC",Georgia,serif; --sans:'Atlas Player Sans',"PingFang SC","Microsoft YaHei",sans-serif; }
 * { box-sizing:border-box; }
 html,body { width:100%; height:100%; margin:0; }
 body { overflow:hidden; color:var(--ink); background:var(--space); font-family:var(--serif); }

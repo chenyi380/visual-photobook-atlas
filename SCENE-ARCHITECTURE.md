@@ -1,5 +1,23 @@
 # 场景方案与参考项目分析
 
+## 2026-10-15：按视频拆分的实现
+
+| 对照项目 | 功能与架构 | 本次取舍 |
+| --- | --- | --- |
+| [BlueWebber/3d-carousel](https://github.com/BlueWebber/3d-carousel) | 原生 Web Component、共享圆柱旋转，ISC | 借鉴共享相位，不引入逐卡边界读取的 overlay；自身不提供曲面或地球遮挡 |
+| [bizarro/infinite-circular-webgl-gallery](https://github.com/bizarro/infinite-circular-webgl-gallery) | OGL/GLSL 曲面与惯性，MIT | 借鉴曲率模型；原项目关闭深度写入且有旧构建依赖，不直接移植 |
+| [bobbyroe/threejs-earth](https://github.com/bobbyroe/threejs-earth) | 多层 Earth、夜灯与 Fresnel，MIT | 保留本站 NASA 贴图和按时间旋转；不换成随机星场或固定每帧旋转 |
+| [pmndrs/postprocessing](https://github.com/pmndrs/postprocessing) | 合并后处理与受控 Bloom，Zlib | 发光仅限星带/流光，避免全背景泛白；现有原生渲染不必迁移 Three.js |
+| [irma-book](https://github.com/fabiosantaniellobruun/irma-book) | 厚书封壳/书脊/合页，MIT | 借鉴真实厚度与合页，不替换已存在的原画册阅读器 |
+
+研究结论是分层实现，不安装整套过时示例。上述项目没有直接提供所上传视频的完整效果，也没有复制其代码。视频手掌是视觉主体，不是摄像头手势需求。
+
+`handheld-cosmos.js` 分离可选择导航星球、装饰星体与蓝色光尘环；共享观察投影和前后遮挡。导航为设计轨道而非实测太阳系；高倾角半径单独约束以保证全周期在屏内。地球使用高精网格，小星体使用简化索引网格，减小 GPU 开销。`orbit-library.js` 将原生播放器界面分为十一片圆柱切面，三层共享相位与透视，按时间解析阻尼暂停/恢复。
+
+`book-journey.js` 使用单一 9.6 秒时间轴和重叠过渡：departure → space → atmosphere → clouds → destination → materialize → opening → reader。目的地为同册真实摄影而非虚构城市航拍。电影云海与手掌新生成，原始旅行照片不重绘。红点只标大致区域，旅程目标与地图共用 marker 坐标；Escape、重复点击锁和减少动态均保留。
+
+摄影地图按图片留白分配约 15%–25% 的范围，使用真实局部 OSM 线条与公里比例尺，明暗适配；不再用整片灰色天空底色。原照片完整画幅、原光色与主体保持。精确源字体未提供，使用接近参考的字形，不声称字体或视频像素完全相同。
+
 ## 2026-10-14 更新
 
 本轮新增 `scene-navigation.js`：以同一可逆进度控制全场景等比例缩放、两种模式融合和中心布局，反向滚轮不重置轨道相位。画册在倾斜空间圆轨道上使用同一观察者透视，按帧时间解析积分减速/启动，选中尺寸平滑变化，不采用瞬时停顿和屏幕椭圆补偿。

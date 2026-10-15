@@ -31,12 +31,14 @@ const orbital = new OrbitalLibrary(shelf, globe, books, {
     attribution.textContent=`${credit.author} · ${credit.license}`;attribution.href=credit.source;
     document.querySelector('#projectionMapCredit').textContent=photo.mapCredit;
     memoryProjection.dataset.book = book.id;
+    memoryProjection.dataset.tone = photo.tone || 'light';
   },
   release() { hideProjection(); if (!reading) globe.releaseFocus(); },
   activate(book,button) { orbital.callbacks.preview(book);journey.start(book,button,previewBook); },
 });
 const navigation=new SceneNavigationController(globe,orbital,updateMode,()=>reading||photoDialog.open||!!journey.active);
 const journey=new BookJourneyController(document.querySelector('#journeyCanvas'),globe,orbital,memoryProjection,book=>openReader(book),book=>orbital.buttons[books.indexOf(book)].focus());
+orbital.cosmos=new HandheldCosmos(globe);
 globe.dragController=new GlobeDragController(document.querySelector('#globeControl'),globe,()=>{
   hideProjection();orbital.active=null;orbital.buttons.forEach(button=>button.classList.remove('active'));
 });
@@ -98,7 +100,7 @@ function updateProjection() {
   document.querySelector('#projectionCone').setAttribute('points', `${point.x},${point.y} ${x + width*.45},${y + height} ${x + width*.67},${y + height}`);
   document.querySelector('#projectionLine').setAttribute('d', `M${x + width*.45},${y + height} L${point.x},${point.y} L${x + width*.67},${y + height}`);
 }
-globe.onFrame = time => { navigation.update(time);orbital.update(time); updateProjection(); };
+globe.onFrame = time => { navigation.update(time);orbital.update(time);if(globe.libraryBlend<1)globe.planetMeshes.push(...orbital.cosmos.decorations(orbital.seconds,1-globe.libraryBlend));updateProjection(); };
 toggleAtlas.addEventListener('click', () => setOrbitOpen(!orbital.opened));
 function openReader(book, updateHash = true) {
   selectedIndex = books.indexOf(book);
