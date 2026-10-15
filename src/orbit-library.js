@@ -16,10 +16,11 @@ class OrbitalLibrary {
       // Player anatomy follows the reference, but the only actual action is to
       // open this travel album. The ornamental controls are never nested buttons.
       const tile=`<span class="player-heading"><span class="player-copy"><b>${book.title}</b><small>${book.english.split(' / ')[0]}</small></span>${heart}</span><span class="player-progress"><i style="--player-position:${(index+.5)/books.length}"></i></span><span class="player-pagination"><span>${book.number}</span><span>${String(books.length).padStart(2,'0')}</span></span><span class="player-controls">${bookmark}${previous}<span class="player-read">${read}</span>${next}${orbit}</span>`;
-      // Eleven tangent strips form one gently bowed screen, including its type,
-      // rail, controls and glass rim. No flat image masquerades as the interface.
-      const segments=Array.from({length:11},(_,i)=>`<span class="tile-segment" style="--segment:${i}"><span class="tile-face">${tile}</span></span>`).join('');
-      button.innerHTML=`<span class="planet-art"><img src="${ATLAS_PLANET_IMAGES[index]}" alt=""><span>${book.title}</span></span><span class="holographic-book curved-tile travel-player" aria-hidden="true">${segments}</span>`;
+      // Native labels and controls bend with the same elevated cylindrical
+      // projection as the single glass outline. The strips have no own rims.
+      const segments=Array.from({length:31},(_,i)=>`<span class="tile-segment" style="--segment:${i}"><span class="tile-face">${tile}</span></span>`).join('');
+      const shell=`<span class="player-glass"></span><svg class="player-shell" viewBox="0 0 236 138" preserveAspectRatio="none" focusable="false"><defs><linearGradient id="player-glass-${index}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eee6d4" stop-opacity=".22"/><stop offset=".48" stop-color="#b7b4ac" stop-opacity=".13"/><stop offset="1" stop-color="#bba17d" stop-opacity=".22"/></linearGradient><linearGradient id="player-rim-${index}" x1="0" y1="0" x2=".95" y2="1"><stop stop-color="#c7e1f1"/><stop offset=".27" stop-color="#fff5dc"/><stop offset=".72" stop-color="#edcda9"/><stop offset="1" stop-color="#e8d3f7"/></linearGradient></defs><path class="player-surface" fill="url(#player-glass-${index})"/><path class="player-rim" fill="none" stroke="url(#player-rim-${index})"/></svg>`;
+      button.innerHTML=`<span class="planet-art"><img src="${ATLAS_PLANET_IMAGES[index]}" alt=""><span>${book.title}</span></span><span class="holographic-book curved-tile travel-player" aria-hidden="true">${shell}${segments}</span>`;
       button.addEventListener('mouseenter',()=>{this.hovered=index;this.preview(index);});
       button.addEventListener('mouseleave',()=>{this.hovered=null;this.endPreview();});
       button.addEventListener('focus',()=>{this.focused=index;this.preview(index);});
@@ -78,7 +79,7 @@ class OrbitalLibrary {
     const amount=this.morph?easeInOutCubic(clamp((time-this.morph.start)/this.morph.duration,0,1)):1;
     const blend=this.navigation?this.globe.libraryBlend:this.morph?(this.opened?amount:1-amount):this.opened?1:0;
     const planetAlpha=1-blend;
-    this.globe.planetMeshes=planetAlpha>0?this.books.map((_,index)=>({index,...this.planetPose(index),alpha:planetAlpha})):[];
+    this.globe.planetMeshes=planetAlpha>0?this.books.map((_,index)=>{const p=this.planetPose(index);return {index,...p,alpha:planetAlpha*(p.planetAlpha??1)};}):[];
     for(let index=0;index<this.buttons.length;index++){
       const button=this.buttons[index],target=this.pose(index);
       const planet=this.planetPose(index),book=this.bookPose(index);
@@ -88,18 +89,23 @@ class OrbitalLibrary {
       const scale=pose.scale+button.highlight;
       button.style.setProperty('--book-opacity',String(blend));button.style.setProperty('--planet-opacity',String(1-blend));
       button.style.setProperty('--book-width',`${pose.width}px`);button.style.setProperty('--book-height',`${pose.height}px`);
-      if(button.querySelectorAll && button.dataset.tileWidth!==pose.width.toFixed(2)){
-        button.dataset.tileWidth=pose.width.toFixed(2);
-        const radius=pose.width/.78;
+      const curveSize=`${pose.width.toFixed(2)}:${pose.height.toFixed(2)}`;
+      if(button.querySelectorAll && button.dataset.curveSize!==curveSize){
+        button.dataset.curveSize=curveSize;
+        const geometry=cylindricalPlayerGeometry(pose.width,pose.height);
+        button.dataset.curveBow=geometry.topBow.toFixed(2);
+        button.querySelectorAll('.player-shell').forEach(shell=>shell.setAttribute('viewBox',`0 0 ${pose.width} ${pose.height}`));
+        button.querySelectorAll('.player-surface,.player-rim').forEach(path=>path.setAttribute('d',geometry.path));
+        button.querySelectorAll('.player-glass').forEach(glass=>glass.style.clipPath=`path("${geometry.path}")`);
         button.querySelectorAll('.tile-segment').forEach((segment,i)=>{
-          const angle=((i+.5)/11-.5)*.78;
-          segment.style.transform=`translate3d(${(radius*Math.sin(angle)).toFixed(2)}px,0,${(radius*(Math.cos(angle)-1)).toFixed(2)}px) rotateY(${(angle*180/Math.PI).toFixed(2)}deg)`;
+          segment.style.transform=`matrix(${geometry.strips[i].matrix.map(value=>value.toFixed(6)).join(',')})`;
         });
       }
       button.style.transform=`translate3d(${(pose.x-pose.width/2).toFixed(2)}px,${(pose.y-pose.height/2).toFixed(2)}px,0) perspective(1200px) rotateY(${pose.turn.toFixed(2)}deg) rotateZ(${this.opened?pose.roll.toFixed(2):0}deg) scale(${scale.toFixed(4)})`;
       const occluded=blend<.05&&this.isEarthOccluded(target);
-      button.style.zIndex=selected?'8':pose.depth>=0?'6':'1';button.style.opacity=String(occluded?0:this.opened&&pose.depth<0?.78:1);
-      button.style.pointerEvents=occluded?'none':'auto';button.dataset.occluded=String(occluded);button.dataset.depth=pose.depth.toFixed(4);
+      const visibleAlpha=blend+(1-blend)*(planet.planetAlpha??1);
+      button.style.zIndex=selected?'8':pose.depth>=0?'6':'1';button.style.opacity=String(occluded?0:visibleAlpha*(this.opened&&pose.depth<0?.78:1));
+      button.style.pointerEvents=occluded||visibleAlpha<.1?'none':'auto';button.dataset.occluded=String(occluded);button.dataset.depth=pose.depth.toFixed(4);
       button.dataset.tier=String(book.tier);
     }
     if(this.morph&&amount===1){this.morph=null;const index=this.hovered??this.focused;if(index!==null)this.preview(index);}

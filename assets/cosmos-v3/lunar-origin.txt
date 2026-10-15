@@ -1,0 +1,1 @@
+Source asset: NASA SVS CGI Moon Kit, https://svs.gsfc.nasa.gov/4720 . LROC color map: https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_2k.jpg . Downloaded 2026-10-15. Original 2048 x 1024 map retained. Runtime shader stylizes the lunar crater texture in blue for the illustrative energy-sphere opening; it is not a photograph or physical simulation of Earth.

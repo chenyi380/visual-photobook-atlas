@@ -100,7 +100,8 @@ function updateProjection() {
   document.querySelector('#projectionCone').setAttribute('points', `${point.x},${point.y} ${x + width*.45},${y + height} ${x + width*.67},${y + height}`);
   document.querySelector('#projectionLine').setAttribute('d', `M${x + width*.45},${y + height} L${point.x},${point.y} L${x + width*.67},${y + height}`);
 }
-globe.onFrame = time => { navigation.update(time);orbital.update(time);if(globe.libraryBlend<1)globe.planetMeshes.push(...orbital.cosmos.decorations(orbital.seconds,1-globe.libraryBlend));updateProjection(); };
+globe.onFrame = time => { orbital.cosmos.update(time);navigation.update(time);orbital.update(time);if(globe.libraryBlend<1)globe.planetMeshes.push(...orbital.cosmos.decorations(orbital.seconds,1-globe.libraryBlend));updateProjection(); };
+document.querySelector('#replayCosmicIntro').addEventListener('click',()=>{if(reading||journey.active)return;setOrbitOpen(false);orbital.cosmos.replay();});
 toggleAtlas.addEventListener('click', () => setOrbitOpen(!orbital.opened));
 function openReader(book, updateHash = true) {
   selectedIndex = books.indexOf(book);

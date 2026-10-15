@@ -56,6 +56,11 @@ class EarthMeshRenderer {
       precision highp float;
       uniform sampler2D uEarth;
       uniform sampler2D uNight;
+      uniform sampler2D uMoon;
+      uniform float uEnergyStrength;
+      uniform float uEnergyCore;
+      uniform float uEnergyTime;
+      uniform float uEnergyReveal;
       uniform float uLayer;
       uniform float uPlanet;
       uniform float uAlpha;
@@ -82,7 +87,7 @@ class EarthMeshRenderer {
           float whiteness = min(surface.r, min(surface.g, surface.b));
           float cloud = smoothstep(0.66, 0.95, whiteness);
           cloud *= smoothstep(0.08, 0.2, vUV.y) * (1.0 - smoothstep(0.8, 0.92, vUV.y));
-          gl_FragColor = vec4(vec3(0.64, 0.77, 0.93) * (0.24 + daylight * 0.9), cloud * 0.23);
+          gl_FragColor = vec4(vec3(0.64, 0.77, 0.93) * (0.24 + daylight * 0.9), cloud * 0.23 * (1.0-uEnergyStrength));
           return;
         }
         float lightMask = smoothstep(0.035, 0.36, max(night.r, max(night.g, night.b)));
@@ -93,7 +98,23 @@ class EarthMeshRenderer {
         color += vec3(0.45, 0.66, 0.86) * specular * ocean * 0.22;
         float litLimb = pow(max(dot(normal.xy, normalize(vec2(0.62, 0.72))), 0.0), 2.5);
         color += vec3(0.46, 0.71, 1.0) * rim * (0.16 + litLimb * 2.2);
-        gl_FragColor = vec4(color, 1.0);
+        if(uEnergyStrength>.001){
+          vec3 moon=texture2D(uMoon,vUV).rgb;
+          float terrain=pow(dot(moon,vec3(.299,.587,.114)),.85);
+          float radial=length(normal.xy),angle=atan(normal.y,normal.x);
+          float turns=angle*2.0+log(radial+.13)*6.2-uEnergyTime*.62;
+          float spiral=pow(.5+.5*sin(turns),7.0)*exp(-radial*2.5);
+          float filaments=pow(.5+.5*sin(turns*1.5+sin(radial*18.0-uEnergyTime)*.5),12.0)*exp(-radial*2.4);
+          float nucleus=exp(-radial*radial*24.0);
+          float limb=pow(1.0-max(normal.z,0.0),2.8);
+          float facing=.43+.57*max(dot(normal,normalize(vec3(-.1,.5,1.0))),0.0);
+          vec3 energy=(vec3(.008,.036,.14)+vec3(.018,.27,.46)*terrain*1.5)*facing;
+          energy+=vec3(.035,.47,.75)*limb*.92;
+          energy+=uEnergyCore*(vec3(.05,.48,.92)*spiral*1.8+vec3(.16,.67,.93)*filaments*.8+vec3(.82,1.05,1.13)*nucleus*1.7);
+          energy+=uEnergyCore*vec3(.018,.11,.20)*exp(-radial*1.7);
+          color=mix(color,energy,uEnergyStrength);
+        }
+        gl_FragColor = vec4(color,mix(1.0,uEnergyReveal,uEnergyStrength));
       }
     `;
     const compile = (type, source) => {
@@ -143,7 +164,7 @@ class EarthMeshRenderer {
     this.planetIndexBuffer=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.planetIndexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(planetIndices),gl.STATIC_DRAW);this.planetIndexCount=planetIndices.length;
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.earthIndexBuffer);
-    this.uniforms = Object.fromEntries(["uViewport", "uCenter", "uRadius", "uYaw", "uPitch", "uEarth", "uNight", "uLayer", "uTime", "uDepth", "uDepthRadius", "uPlanet", "uPalette", "uAlpha"]
+    this.uniforms = Object.fromEntries(["uViewport", "uCenter", "uRadius", "uYaw", "uPitch", "uEarth", "uNight", "uMoon", "uEnergyStrength", "uEnergyCore", "uEnergyTime", "uEnergyReveal", "uLayer", "uTime", "uDepth", "uDepthRadius", "uPlanet", "uPalette", "uAlpha"]
       .map(name => [name, gl.getUniformLocation(this.program, name)]));
     this.texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.texture);
@@ -154,6 +175,12 @@ class EarthMeshRenderer {
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clearColor(0, 0, 0, 0);
+    this.moonTexture=gl.createTexture();gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,this.moonTexture);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array([100,100,100]));
+    for(const key of [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T])gl.texParameteri(gl.TEXTURE_2D,key,gl.CLAMP_TO_EDGE);
+    for(const key of [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,key,gl.LINEAR);
+    this.moonImage=new Image();this.moonImage.onload=()=>{gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,this.moonTexture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,this.moonImage);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,this.texture);};
+    this.moonImage.src='assets/cosmos-v3/lunar-craters-2k.jpg';gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,this.texture);
   }
 
   setTexture(image, nightImage) {
@@ -215,11 +242,17 @@ class EarthMeshRenderer {
     gl.uniform1f(this.uniforms.uPitch, globe.pitch);
     gl.uniform1i(this.uniforms.uEarth, 0);
     gl.uniform1i(this.uniforms.uNight, 1);
+    gl.uniform1i(this.uniforms.uMoon,2);
+    gl.uniform1f(this.uniforms.uEnergyStrength,globe.energyStrength??0);
+    gl.uniform1f(this.uniforms.uEnergyCore,globe.energyCore??0);
+    gl.uniform1f(this.uniforms.uEnergyTime,globe.energyTime??time/1000);
+    gl.uniform1f(this.uniforms.uEnergyReveal,globe.cosmicReveal??1);
     gl.uniform1f(this.uniforms.uLayer, 0);
     gl.uniform1f(this.uniforms.uPlanet,0);
     gl.uniform1f(this.uniforms.uDepth,0);
     gl.uniform1f(this.uniforms.uDepthRadius,globe.baseRadius/(globe.planetUnit??globe.baseRadius));
     gl.uniform1f(this.uniforms.uTime, time / 1000);
+    gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
     gl.drawElements(gl.TRIANGLES, this.indexCount, gl.UNSIGNED_SHORT, 0);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -231,7 +264,7 @@ class EarthMeshRenderer {
   }
 
   drawPlanets(globe,time){
-    const gl=this.gl,colors=[[.91,.42,.30],[.20,.62,.80],[.59,.42,.79],[.95,.66,.30],[.25,.70,.51],[.43,.56,.88],[.86,.44,.63],[.77,.63,.45],[.32,.76,.73],[.60,.68,.79]];
+    const gl=this.gl,colors=[[.45,.60,.81],[.38,.70,.87],[.69,.52,.78],[.78,.78,.83],[.40,.59,.76],[.43,.56,.88],[.77,.54,.73],[.63,.70,.79],[.46,.72,.81],[.70,.72,.79]];
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.planetIndexBuffer);
     gl.uniform1f(this.uniforms.uLayer,0);gl.uniform1f(this.uniforms.uPlanet,1);
     gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
@@ -368,10 +401,11 @@ class OrbitalLibrary {
       // Player anatomy follows the reference, but the only actual action is to
       // open this travel album. The ornamental controls are never nested buttons.
       const tile=`<span class="player-heading"><span class="player-copy"><b>${book.title}</b><small>${book.english.split(' / ')[0]}</small></span>${heart}</span><span class="player-progress"><i style="--player-position:${(index+.5)/books.length}"></i></span><span class="player-pagination"><span>${book.number}</span><span>${String(books.length).padStart(2,'0')}</span></span><span class="player-controls">${bookmark}${previous}<span class="player-read">${read}</span>${next}${orbit}</span>`;
-      // Eleven tangent strips form one gently bowed screen, including its type,
-      // rail, controls and glass rim. No flat image masquerades as the interface.
-      const segments=Array.from({length:11},(_,i)=>`<span class="tile-segment" style="--segment:${i}"><span class="tile-face">${tile}</span></span>`).join('');
-      button.innerHTML=`<span class="planet-art"><img src="${ATLAS_PLANET_IMAGES[index]}" alt=""><span>${book.title}</span></span><span class="holographic-book curved-tile travel-player" aria-hidden="true">${segments}</span>`;
+      // Native labels and controls bend with the same elevated cylindrical
+      // projection as the single glass outline. The strips have no own rims.
+      const segments=Array.from({length:31},(_,i)=>`<span class="tile-segment" style="--segment:${i}"><span class="tile-face">${tile}</span></span>`).join('');
+      const shell=`<span class="player-glass"></span><svg class="player-shell" viewBox="0 0 236 138" preserveAspectRatio="none" focusable="false"><defs><linearGradient id="player-glass-${index}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eee6d4" stop-opacity=".22"/><stop offset=".48" stop-color="#b7b4ac" stop-opacity=".13"/><stop offset="1" stop-color="#bba17d" stop-opacity=".22"/></linearGradient><linearGradient id="player-rim-${index}" x1="0" y1="0" x2=".95" y2="1"><stop stop-color="#c7e1f1"/><stop offset=".27" stop-color="#fff5dc"/><stop offset=".72" stop-color="#edcda9"/><stop offset="1" stop-color="#e8d3f7"/></linearGradient></defs><path class="player-surface" fill="url(#player-glass-${index})"/><path class="player-rim" fill="none" stroke="url(#player-rim-${index})"/></svg>`;
+      button.innerHTML=`<span class="planet-art"><img src="${ATLAS_PLANET_IMAGES[index]}" alt=""><span>${book.title}</span></span><span class="holographic-book curved-tile travel-player" aria-hidden="true">${shell}${segments}</span>`;
       button.addEventListener('mouseenter',()=>{this.hovered=index;this.preview(index);});
       button.addEventListener('mouseleave',()=>{this.hovered=null;this.endPreview();});
       button.addEventListener('focus',()=>{this.focused=index;this.preview(index);});
@@ -430,7 +464,7 @@ class OrbitalLibrary {
     const amount=this.morph?easeInOutCubic(clamp((time-this.morph.start)/this.morph.duration,0,1)):1;
     const blend=this.navigation?this.globe.libraryBlend:this.morph?(this.opened?amount:1-amount):this.opened?1:0;
     const planetAlpha=1-blend;
-    this.globe.planetMeshes=planetAlpha>0?this.books.map((_,index)=>({index,...this.planetPose(index),alpha:planetAlpha})):[];
+    this.globe.planetMeshes=planetAlpha>0?this.books.map((_,index)=>{const p=this.planetPose(index);return {index,...p,alpha:planetAlpha*(p.planetAlpha??1)};}):[];
     for(let index=0;index<this.buttons.length;index++){
       const button=this.buttons[index],target=this.pose(index);
       const planet=this.planetPose(index),book=this.bookPose(index);
@@ -440,18 +474,23 @@ class OrbitalLibrary {
       const scale=pose.scale+button.highlight;
       button.style.setProperty('--book-opacity',String(blend));button.style.setProperty('--planet-opacity',String(1-blend));
       button.style.setProperty('--book-width',`${pose.width}px`);button.style.setProperty('--book-height',`${pose.height}px`);
-      if(button.querySelectorAll && button.dataset.tileWidth!==pose.width.toFixed(2)){
-        button.dataset.tileWidth=pose.width.toFixed(2);
-        const radius=pose.width/.78;
+      const curveSize=`${pose.width.toFixed(2)}:${pose.height.toFixed(2)}`;
+      if(button.querySelectorAll && button.dataset.curveSize!==curveSize){
+        button.dataset.curveSize=curveSize;
+        const geometry=cylindricalPlayerGeometry(pose.width,pose.height);
+        button.dataset.curveBow=geometry.topBow.toFixed(2);
+        button.querySelectorAll('.player-shell').forEach(shell=>shell.setAttribute('viewBox',`0 0 ${pose.width} ${pose.height}`));
+        button.querySelectorAll('.player-surface,.player-rim').forEach(path=>path.setAttribute('d',geometry.path));
+        button.querySelectorAll('.player-glass').forEach(glass=>glass.style.clipPath=`path("${geometry.path}")`);
         button.querySelectorAll('.tile-segment').forEach((segment,i)=>{
-          const angle=((i+.5)/11-.5)*.78;
-          segment.style.transform=`translate3d(${(radius*Math.sin(angle)).toFixed(2)}px,0,${(radius*(Math.cos(angle)-1)).toFixed(2)}px) rotateY(${(angle*180/Math.PI).toFixed(2)}deg)`;
+          segment.style.transform=`matrix(${geometry.strips[i].matrix.map(value=>value.toFixed(6)).join(',')})`;
         });
       }
       button.style.transform=`translate3d(${(pose.x-pose.width/2).toFixed(2)}px,${(pose.y-pose.height/2).toFixed(2)}px,0) perspective(1200px) rotateY(${pose.turn.toFixed(2)}deg) rotateZ(${this.opened?pose.roll.toFixed(2):0}deg) scale(${scale.toFixed(4)})`;
       const occluded=blend<.05&&this.isEarthOccluded(target);
-      button.style.zIndex=selected?'8':pose.depth>=0?'6':'1';button.style.opacity=String(occluded?0:this.opened&&pose.depth<0?.78:1);
-      button.style.pointerEvents=occluded?'none':'auto';button.dataset.occluded=String(occluded);button.dataset.depth=pose.depth.toFixed(4);
+      const visibleAlpha=blend+(1-blend)*(planet.planetAlpha??1);
+      button.style.zIndex=selected?'8':pose.depth>=0?'6':'1';button.style.opacity=String(occluded?0:visibleAlpha*(this.opened&&pose.depth<0?.78:1));
+      button.style.pointerEvents=occluded||visibleAlpha<.1?'none':'auto';button.dataset.occluded=String(occluded);button.dataset.depth=pose.depth.toFixed(4);
       button.dataset.tier=String(book.tier);
     }
     if(this.morph&&amount===1){this.morph=null;const index=this.hovered??this.focused;if(index!==null)this.preview(index);}
@@ -1113,9 +1152,10 @@ class SceneNavigationController {
     this.progress+=(this.target-this.progress)*(this.globe.reducedMotion?1:1-Math.exp(-delta/140));
     if(Math.abs(this.progress-this.target)<.0005)this.progress=this.target;
     const g=this.globe,pose=sceneNavigationPose(this.progress,g.planetRadius,g.bookRadius);
-    g.sceneZoom=pose.zoom;g.libraryBlend=pose.blend;g.baseRadius=pose.radius;g.targetRadius=0;
-    g.planetUnit=(g.planetBaseUnit??g.planetUnit)*pose.zoom;
-    g.restCenterY=g.height*pose.center;g.centerY=g.restCenterY;
+    const introScale=1+((g.cosmicIntroScale??1)-1)*(1-pose.blend);
+    g.sceneZoom=pose.zoom;g.libraryBlend=pose.blend;g.baseRadius=pose.radius*introScale;g.targetRadius=0;
+    g.planetUnit=(g.planetBaseUnit??g.planetUnit)*pose.zoom*introScale;
+    g.restCenterY=g.height*(pose.center+((g.cosmicIntroCenter??.43)-.43)*(1-pose.blend));g.centerY=g.restCenterY;
     const opened=pose.blend>.5;
     if(opened!==this.library.opened){this.library.opened=opened;this.library.active=null;this.library.syncLabels();this.onMode(opened);}
     g.libraryOpened=opened;
@@ -1151,12 +1191,48 @@ function dampedOrbitStep(speed,target,delta,tau=100) {
   return {speed:target+(speed-target)*decay,angle:target*delta+(speed-target)*tau*(1-decay)};
 }
 
+// The player's screen is a section of a cylinder seen from an elevated camera.
+// A yaw-only transform cannot reveal this bow: depth must also displace the
+// upper/lower edges vertically. The silhouette and native content use exactly
+// the same projected surface, with one continuous rim and no strip borders.
+function cylindricalPlayerGeometry(width,height,segmentCount=31) {
+  const arc=1.50,radius=width/arc,elevation=.60,camera=width*8;
+  const raw=(u,v)=>{
+    const angle=(u-.5)*arc,x=radius*Math.sin(angle),z=radius*(Math.cos(angle)-1),y=(v-.5)*height;
+    const screenY=y*Math.cos(elevation)+z*Math.sin(elevation);
+    const depth=z*Math.cos(elevation)-y*Math.sin(elevation),p=camera/(camera-depth);
+    return {x:x*p,y:screenY*p};
+  };
+  const bounds=[];
+  for(let n=0;n<=64;n++)for(const v of [0,1])bounds.push(raw(n/64,v));
+  const minX=Math.min(...bounds.map(p=>p.x)),maxX=Math.max(...bounds.map(p=>p.x));
+  const minY=Math.min(...bounds.map(p=>p.y)),maxY=Math.max(...bounds.map(p=>p.y));
+  const project=(u,v)=>{const p=raw(u,v);return {x:(p.x-minX)*width/(maxX-minX),y:(p.y-minY)*height/(maxY-minY)};};
+  const rx=Math.min(.045,8/width),ry=Math.min(.075,8/height),boundary=[];
+  const edge=(u0,v0,u1,v1,count=32)=>{for(let n=0;n<=count;n++){const t=n/count;boundary.push(project(u0+(u1-u0)*t,v0+(v1-v0)*t));}};
+  const corner=(cx,cy,from,to)=>{for(let n=1;n<=8;n++){const a=from+(to-from)*n/8;boundary.push(project(cx+rx*Math.cos(a),cy+ry*Math.sin(a)));}};
+  edge(rx,0,1-rx,0);corner(1-rx,ry,-Math.PI/2,0);
+  edge(1,ry,1,1-ry,8);corner(1-rx,1-ry,0,Math.PI/2);
+  edge(1-rx,1,rx,1);corner(rx,1-ry,Math.PI/2,Math.PI);
+  edge(0,1-ry,0,ry,8);corner(rx,ry,Math.PI,Math.PI*1.5);
+  const path=boundary.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(3)} ${p.y.toFixed(3)}`).join(' ')+' Z';
+  const strips=Array.from({length:segmentCount},(_,i)=>{
+    const u0=i/segmentCount,u1=(i+1)/segmentCount,u=(u0+u1)/2,w=width/segmentCount;
+    const left=project(u0,.5),right=project(u1,.5),top=project(u,0),bottom=project(u,1),center=project(u,.5);
+    const a=(right.x-left.x)/w,b=(right.y-left.y)/w,c=(bottom.x-top.x)/height,d=(bottom.y-top.y)/height;
+    return {matrix:[a,b,c,d,center.x-a*w/2-c*height/2,center.y-b*w/2-d*height/2],width:w};
+  });
+  const topBow=project(.5,0).y-(project(0,0).y+project(1,0).y)/2;
+  const bottomBow=project(.5,1).y-(project(0,1).y+project(1,1).y)/2;
+  return {width,height,path,strips,topBow,bottomBow,project};
+}
+
 // A single authored timeline connects the scene to its original reader.
-const BOOK_JOURNEY_DURATION=9600;
+const BOOK_JOURNEY_DURATION=8000;
 function journeyPhase(elapsed,reduced=false) {
   const time=Math.max(0,elapsed);
   if(reduced)return {phase:time<220?'opening':'complete',progress:clamp(time/220,0,1),totalProgress:clamp(time/220,0,1)};
-  const phases=[['departure',0,700],['space',700,2050],['atmosphere',2050,3350],['clouds',3350,4800],['destination',4800,6000],['materialize',6000,7250],['opening',7250,BOOK_JOURNEY_DURATION]];
+  const phases=[['departure',0,550],['space',550,1600],['atmosphere',1600,2850],['clouds',2850,4050],['destination',4050,4850],['materialize',4850,6100],['opening',6100,BOOK_JOURNEY_DURATION]];
   for(const [phase,start,end] of phases)if(time<end)return {phase,progress:clamp((time-start)/(end-start),0,1),totalProgress:clamp(time/BOOK_JOURNEY_DURATION,0,1)};
   return {phase:'complete',progress:1,totalProgress:1};
 }
@@ -1177,22 +1253,35 @@ class BookJourneyController {
     this.context.setTransform(this.ratio,0,0,this.ratio,0,0);if(this.card)this.sizeBook();
   }
   sizeBook(){
-    this.bookWidth=Math.max(112,Math.min(286,innerWidth*.24,innerHeight*.32));
-    this.card.style.width=`${this.bookWidth}px`;this.card.style.height=`${this.bookWidth*1.42}px`;
+    this.bookWidth=Math.max(100,Math.min(250,innerWidth*.17,innerHeight*.245));
+    this.card.style.width=`${this.bookWidth}px`;this.card.style.height=`${this.bookWidth*1.30}px`;
     this.card.style.setProperty('--book-thickness',`${Math.max(10,this.bookWidth*.070)}px`);
   }
   loadImage(source){
     if(this.imageCache.has(source))return this.imageCache.get(source);
     const photo=new Image();photo.decoding='async';photo.src=source;this.imageCache.set(source,photo);return photo;
   }
-  loadPhoto(book){return this.loadImage(ATLAS_PROJECTION_IMAGES[book.id]||ATLAS_BOOK_IMAGES[book.id]);}
+  loadPhoto(book){return this.loadImage(ATLAS_BOOK_IMAGES[book.id]||ATLAS_PROJECTION_IMAGES[book.id]);}
   makeBook(book){
-    const card=document.createElement('div');card.className='journey-card journey-book';card.setAttribute('aria-hidden','true');
-    card.innerHTML=`<div class="j-book-volume"><div class="j-book-back"></div><div class="j-book-paper"></div><div class="j-book-spine"></div><div class="j-book-leaf j-book-title-page"><span class="j-book-leaf-inner"><span class="j-book-place"></span><span class="j-book-english"></span></span></div>${Array.from({length:5},(_,i)=>`<div class="j-book-leaf j-book-turning" style="--leaf:${i}"><span class="j-book-leaf-inner">${i===0?'<span class="j-book-leaf-photo"></span><span class="j-book-place"></span>':''}</span></div>`).join('')}<div class="j-book-cover"><div class="j-book-cover-outside"><div class="j-book-cover-frame"><span class="j-book-photo"></span><span class="j-book-cover-title"></span><span class="j-book-cover-english"></span></div></div><div class="j-book-cover-inside"></div></div></div>`;
-    card.querySelectorAll('.j-book-place,.j-book-cover-title').forEach(el=>{el.textContent=book.title;});
-    card.querySelectorAll('.j-book-english,.j-book-cover-english').forEach(el=>{el.textContent=book.english.split(' / ')[0];});
-    card.querySelectorAll('.j-book-photo,.j-book-leaf-photo').forEach(el=>{el.style.backgroundImage=`url("${ATLAS_BOOK_IMAGES[book.id]}")`;});
-    document.body.append(card);this.card=card;this.sizeBook();
+    const card=document.createElement('div');card.className='journey-card journey-book';card.setAttribute('aria-hidden','true');card.textContent=book.title;
+    document.body.append(card);this.card=card;this.sizeBook();this.coverTexture=this.createCoverTexture(book);
+  }
+  createCoverTexture(book){
+    const canvas=document.createElement('canvas');canvas.width=700;canvas.height=910;const c=canvas.getContext('2d');
+    const leather=c.createLinearGradient(0,0,700,910);leather.addColorStop(0,'#776043');leather.addColorStop(.4,'#4b3a2d');leather.addColorStop(1,'#33281f');c.fillStyle=leather;c.fillRect(0,0,700,910);
+    for(let i=0;i<5000;i++){c.fillStyle=i%2?'#dcc4960b':'#08060312';c.fillRect(journeySeed(i+8)*700,journeySeed(i+91)*910,1+journeySeed(i+7)*2,1);}
+    for(const inset of [20,26,45,49,65]){c.strokeStyle=inset===20?'#ffdda0':'#bfa26a';c.lineWidth=inset===20?3:1;c.strokeRect(inset,inset,700-inset*2,910-inset*2);}
+    c.strokeStyle='#d7b678';c.lineWidth=2;
+    for(const [x,y,dx,dy] of [[67,67,1,1],[633,67,-1,1],[67,843,1,-1],[633,843,-1,-1]]){
+      c.save();c.translate(x,y);c.scale(dx,dy);
+      for(let i=0;i<3;i++){c.beginPath();c.moveTo(0,16+i*7);c.bezierCurveTo(32,15,14,48,44,48+i*6);c.bezierCurveTo(59,46,49,15,22+i*5,4);c.stroke();}c.restore();
+    }
+    const title=book.title,characters=Array.from(title);c.textAlign='center';c.textBaseline='middle';c.shadowOffsetY=2;c.shadowBlur=4;c.shadowColor='#170d05';
+    const gold=c.createLinearGradient(0,240,0,650);gold.addColorStop(0,'#fff1bb');gold.addColorStop(.45,'#d3ad66');gold.addColorStop(.7,'#ffe0a0');gold.addColorStop(1,'#ae7b35');c.fillStyle=gold;
+    if(characters.length<=4){const size=characters.length===4?91:118;c.font=`400 ${size}px KaiTi,STKaiti,SimSun,serif`;characters.forEach((char,i)=>c.fillText(char,350,455+(i-(characters.length-1)/2)*(size+25)));}
+    else{c.font='400 88px Georgia,serif';c.fillText(title,350,450,490);}
+    c.shadowBlur=0;c.shadowOffsetY=0;c.font='400 19px Georgia,serif';c.fillStyle='#d4be90';c.fillText(book.english.split(' / ')[0],350,760,470);
+    c.strokeStyle='#baa071';c.beginPath();c.moveTo(284,703);c.lineTo(416,703);c.stroke();return canvas;
   }
   start(book,button,locationBook) {
     if(this.active)return false;
@@ -1212,7 +1301,7 @@ class BookJourneyController {
   requestFrame(){const generation=this.generation;this.raf=requestAnimationFrame(time=>{if(generation===this.generation)this.frame(time);});}
   clear(){
     ++this.generation;if(this.raf!=null)cancelAnimationFrame(this.raf);this.raf=null;this.active=null;this.library.busy=this.library.previewHeld=false;
-    this.card?.remove();this.card=null;this.canvas.classList.remove('visible');this.context.clearRect(0,0,innerWidth,innerHeight);
+    this.card?.remove();this.card=null;this.bookPose=null;this.coverTexture=null;this.canvas.classList.remove('visible');this.context.clearRect(0,0,innerWidth,innerHeight);
     document.body.classList.remove('journey-active');document.body.dataset.journey='idle';
     document.querySelector('#libraryView').setAttribute('aria-busy','false');document.querySelector('#journeyStatus').textContent='';
   }
@@ -1235,170 +1324,416 @@ class BookJourneyController {
     g.addColorStop(.24,color==='blue'?`rgba(121,203,255,${strength*.3})`:`rgba(255,185,81,${strength*.29})`);g.addColorStop(1,'rgba(255,194,107,0)');ctx.fillStyle=g;ctx.fillRect(x-radius,y-radius,radius*2,radius*2);
   }
   drawStream(start,end,progress,opacity=1){
-    const ctx=this.context,h=innerHeight,eased=journeySmooth(progress),head=journeyCurve(start,end,eased,h);ctx.save();ctx.globalCompositeOperation='screen';
-    for(let strand=0;strand<7;strand++){
-      const duration=.20+strand*.015,begin=Math.max(0,eased-duration),tail=journeyCurve(start,end,begin,h),gradient=ctx.createLinearGradient(tail.x,tail.y,head.x+.01,head.y+.01);
-      const colors=['255,191,78','255,225,152','255,246,221','173,170,255','128,221,248','239,180,226','255,209,130'];
-      gradient.addColorStop(0,`rgba(${colors[strand]},0)`);gradient.addColorStop(.73,`rgba(${colors[strand]},${opacity*(strand<3?.52:.20)})`);gradient.addColorStop(1,`rgba(255,252,233,${opacity*.95})`);
-      ctx.strokeStyle=gradient;ctx.lineWidth=strand<3?1.5+(2-strand)*1.7:.8;ctx.shadowColor='#ffc679';ctx.shadowBlur=strand<3?14:5;ctx.beginPath();
-      for(let i=0;i<=40;i++){const t=begin+(eased-begin)*i/40,p=journeyCurve(start,end,t,h),separation=Math.sin(i/40*Math.PI)*(strand-3)*2.5,x=p.x+Math.sin(t*14+strand)*separation,y=p.y+Math.cos(t*10+strand)*separation;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);}ctx.stroke();
+    const ctx=this.context,w=innerWidth,h=innerHeight,head=journeyCurve(start,end,journeySmooth(progress),h),time=(this.frameElapsed||0)/1000;
+    const tail={x:start.x,y:start.y},dx=head.x-tail.x,dy=head.y-tail.y,length=Math.max(1,Math.hypot(dx,dy)),nx=-dy/length,ny=dx/length;
+    const curve=offset=>{ctx.beginPath();ctx.moveTo(tail.x+nx*offset,tail.y+ny*offset);ctx.bezierCurveTo(tail.x+dx*.35+nx*(offset*.55-15),tail.y+dy*.35+ny*(offset*.55-15),head.x-dx*.16+nx*offset*.06,head.y-dy*.16+ny*offset*.06,head.x,head.y);};
+    ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha*=opacity;ctx.lineCap='round';
+    // A broad amber plume and white-hot core, not a thin decorative line.
+    for(const [width,alpha,blur] of [[h*.115,.16,35],[h*.052,.35,18],[h*.020,.75,8],[Math.max(3,h*.005),1,2]]){
+      const g=ctx.createLinearGradient(tail.x,tail.y,head.x,head.y);g.addColorStop(0,`rgba(251,171,63,${alpha*.02})`);g.addColorStop(.44,`rgba(255,191,82,${alpha*.72})`);g.addColorStop(.88,`rgba(255,224,157,${alpha})`);g.addColorStop(1,`rgba(255,251,223,${alpha})`);
+      ctx.strokeStyle=g;ctx.lineWidth=width;ctx.shadowColor='#ffbf58';ctx.shadowBlur=blur;ctx.filter=blur>15?`blur(${blur*.45}px)`:'none';curve(0);ctx.stroke();
     }
-    this.glow(head.x,head.y,Math.min(innerWidth,h)*.12,opacity);ctx.restore();return head;
+    ctx.filter='none';ctx.shadowBlur=6;
+    for(let i=0;i<31;i++){
+      const seed=journeySeed(i+12),offset=(seed-.5)*h*.32*(.85+Math.sin(time*1.8+i)*.10),colored=i>27;
+      const g=ctx.createLinearGradient(tail.x,tail.y,head.x,head.y);g.addColorStop(0,'#f6b75b00');g.addColorStop(.65,colored?'#c1d1ff28':`rgba(255,219,151,${.12+seed*.24})`);g.addColorStop(1,'#fff4cfb0');ctx.strokeStyle=g;ctx.lineWidth=.5+seed*1.4;curve(offset);ctx.stroke();
+    }
+    this.glow(head.x,head.y,Math.min(w,h)*.19,.95);
+    const flare=ctx.createLinearGradient(head.x-w*.16,head.y,head.x+w*.16,head.y);flare.addColorStop(0,'#ffbb4a00');flare.addColorStop(.5,'#fff7d6df');flare.addColorStop(1,'#ffbb4a00');ctx.fillStyle=flare;ctx.fillRect(head.x-w*.16,head.y-1,w*.32,2);
+    ctx.restore();return head;
   }
   drawSpace(elapsed,opacity){
-    const ctx=this.context,w=innerWidth,h=innerHeight,a=this.active,settle=journeyRange(elapsed,700,1850),cx=(a.target.x+(.57-a.target.x)*settle)*w,cy=(a.target.y+(.43-a.target.y)*settle)*h;
+    const ctx=this.context,w=innerWidth,h=innerHeight,a=this.active,settle=journeyRange(elapsed,550,1500),cx=(a.target.x+(.62-a.target.x)*settle)*w,cy=(a.target.y+(.44-a.target.y)*settle)*h;
     ctx.save();ctx.globalAlpha=opacity;const base=ctx.createLinearGradient(0,0,w,h);base.addColorStop(0,'#02040b');base.addColorStop(.55,'#07101c');base.addColorStop(1,'#152032');ctx.fillStyle=base;ctx.fillRect(0,0,w,h);
-    const speed=journeyRange(elapsed,700,1750)*(1-journeyRange(elapsed,2350,3400)),distance=Math.hypot(w,h);ctx.globalCompositeOperation='screen';
+    const speed=journeyRange(elapsed,550,1350)*(1-journeyRange(elapsed,1600,2600)),distance=Math.hypot(w,h);ctx.globalCompositeOperation='screen';
     for(let i=0;i<115;i++){
-      const angle=journeySeed(i+89)*Math.PI*2,seed=journeySeed(i+247),cycle=(seed+Math.max(0,elapsed-700)*.00014)%1,r=(.03+cycle*cycle)*distance*.84,x=cx+Math.cos(angle)*r,y=cy+Math.sin(angle)*r,len=(1+speed*92)*cycle;
+      const angle=journeySeed(i+89)*Math.PI*2,seed=journeySeed(i+247),cycle=(seed+Math.max(0,elapsed-550)*.00025)%1,r=(.03+cycle*cycle)*distance*.84,x=cx+Math.cos(angle)*r,y=cy+Math.sin(angle)*r,len=(1+speed*135)*cycle;
       ctx.strokeStyle=`rgba(${i%5===0?'249,201,146':'192,215,237'},${(.18+seed*.6)*(1-speed*.32)})`;ctx.lineWidth=.5+seed*.9;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(angle)*len,y+Math.sin(angle)*len);ctx.stroke();
     }
-    this.glow(cx,cy,Math.min(w,h)*(.08+speed*.12),.35+speed*.2);
-    for(let i=0;i<6;i++){ctx.strokeStyle=`rgba(${i<3?'255,209,135':'172,199,255'},${.05+(1-i/6)*speed*.16})`;ctx.lineWidth=(6-i)*.65;ctx.beginPath();ctx.moveTo(-w*.08,h*(.83+i*.035));ctx.bezierCurveTo(w*.22,h*.8,w*.31,h*.42,cx,cy);ctx.stroke();}
     ctx.restore();
   }
   drawAtmosphere(elapsed){
-    const ctx=this.context,w=innerWidth,h=innerHeight,entry=journeyRange(elapsed,1850,4000),exit=1-journeyRange(elapsed,4100,5100);if(entry<=0||exit<=0)return;
-    const radius=w*(1.17+entry*.8),cx=w*.44,cy=h*.54+radius+entry*h*.10;ctx.save();ctx.globalAlpha=entry*exit;
-    const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#0b1632');sky.addColorStop(.5,'#365777');sky.addColorStop(.8,'#7c9eae');sky.addColorStop(1,'#b8cbd1');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+    const ctx=this.context,w=innerWidth,h=innerHeight,entry=journeyRange(elapsed,1350,2250),exit=1-journeyRange(elapsed,2850,3550);if(entry<=0||exit<=0)return;
+    const radius=w*(.86+entry*.5),cx=w*.38,cy=h*.42+radius+entry*h*.06;ctx.save();ctx.globalAlpha=entry*exit;
+    const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#030812');sky.addColorStop(.5,'#10243b');sky.addColorStop(.8,'#567d9b');sky.addColorStop(1,'#b8cbd1');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+    ctx.translate(w/2,h/2);ctx.rotate(.16*(1-journeyRange(elapsed,2600,3500)));ctx.translate(-w/2,-h/2);
     for(let i=5;i>=0;i--){ctx.strokeStyle=`rgba(${i<2?'209,243,255':'90,164,241'},${i<2?.7:.08})`;ctx.lineWidth=2+i*8;ctx.beginPath();ctx.arc(cx,cy,radius-i*3,Math.PI,Math.PI*2);ctx.stroke();}
     ctx.save();ctx.beginPath();ctx.arc(cx,cy,radius,Math.PI,Math.PI*2);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.clip();
-    const earth=ctx.createLinearGradient(0,h*.4,0,h);earth.addColorStop(0,'#658b9a');earth.addColorStop(.4,'#274558');earth.addColorStop(1,'#101f30');ctx.fillStyle=earth;ctx.fillRect(0,0,w,h);
-    this.drawCloudPlate(elapsed,journeyRange(elapsed,2350,3350)*.9);this.drawCloudLayers(elapsed,.15,true);ctx.restore();
-    ctx.globalCompositeOperation='screen';this.glow(w*.81,h*.39,Math.min(w,h)*.31,.56);this.drawStream({x:-w*.15,y:h*.87},{x:w*(.54+.19*entry),y:h*(.49+.12*entry)},.90,.65);ctx.restore();
+    const earth=ctx.createLinearGradient(0,h*.4,0,h);earth.addColorStop(0,'#658b9a');earth.addColorStop(.4,'#274558');earth.addColorStop(1,'#101f30');ctx.fillStyle=earth;ctx.fillRect(-w,-h,w*3,h*3);
+    this.drawCloudPlate(elapsed,journeyRange(elapsed,1700,2550)*.96,true);this.drawCloudLayers(elapsed,.11,true);ctx.restore();ctx.restore();
   }
   drawCloudLayers(elapsed,opacity=1,distant=false){
-    if(!this.cloudSprites)return;const ctx=this.context,w=innerWidth,h=innerHeight,travel=clamp((elapsed-3000)/1900,0,1),inheritedAlpha=ctx.globalAlpha;ctx.save();const count=distant?12:26;
+    if(!this.cloudSprites)return;const ctx=this.context,w=innerWidth,h=innerHeight,travel=clamp((elapsed-2400)/1800,0,1),inheritedAlpha=ctx.globalAlpha;ctx.save();const count=distant?12:26;
     for(let i=0;i<count;i++){
       const seed=journeySeed(i+517),depth=(i%5)/4,size=w*(.25+depth*.60),drift=elapsed/1000*(11+depth*29),x=((journeySeed(i+42)*w*1.5+drift)%(w*1.7))-w*.36,y=h*(distant?.58:.29)+seed*h*.56+(distant?0:(depth-.4)*travel*h*.30);
       ctx.globalAlpha=inheritedAlpha*opacity*(.33+depth*.54);ctx.drawImage(this.cloudSprites[i%5],x-size*.5,y-size*.25,size,size*.5);
     }ctx.restore();
   }
-  drawCloudPlate(elapsed,opacity=1){
+  drawCloudPlate(elapsed,opacity=1,surface=false){
     const image=this.cloudSea;if(!image||!image.complete||image.naturalWidth<=0){this.canvas.dataset.cloudImage='loading';return false;}
-    const ctx=this.context,w=innerWidth,h=innerHeight,travel=journeyRange(elapsed,2050,5200),zoom=1.06+travel*.14;
+    const ctx=this.context,w=innerWidth,h=innerHeight,travel=journeyRange(elapsed,1600,4400),zoom=1.06+travel*.22;
     const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight)*zoom,width=image.naturalWidth*scale,height=image.naturalHeight*scale;
     ctx.save();ctx.globalAlpha*=opacity;
     // Generated cinematic cloud plate only; never represented as a destination photograph.
-    ctx.drawImage(image,(w-width)/2,(h-height)/2+h*(.035-travel*.065),width,height);ctx.restore();
+    if(surface)ctx.drawImage(image,0,image.naturalHeight*.32,image.naturalWidth,image.naturalHeight*.68,-w*.30,h*.12,w*1.60,h*1.35);
+    else ctx.drawImage(image,(w-width)/2,(h-height)/2+h*(.035-travel*.095),width,height);ctx.restore();
     this.canvas.dataset.cloudImage='ready';return true;
   }
   drawCloudSea(elapsed){
-    const ctx=this.context,w=innerWidth,h=innerHeight,enter=journeyRange(elapsed,3100,3650),leave=1-journeyRange(elapsed,4750,5550);if(enter*leave<=0)return;ctx.save();ctx.globalAlpha=enter*leave;
+    const ctx=this.context,w=innerWidth,h=innerHeight,enter=journeyRange(elapsed,2500,3050),leave=1-journeyRange(elapsed,3900,4550);if(enter*leave<=0)return;ctx.save();ctx.globalAlpha=enter*leave;
     const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#1b3554');sky.addColorStop(.35,'#7b9caf');sky.addColorStop(.69,'#c0d3d7');sky.addColorStop(1,'#dce4e0');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
     const plateReady=this.drawCloudPlate(elapsed,.98);this.glow(w*.78,h*.21,h*.34,.22);this.drawCloudLayers(elapsed,plateReady?.19:.96);
-    const penetration=journeyRange(elapsed,3800,4600),haze=.025+Math.sin(penetration*Math.PI)*.09;ctx.fillStyle=`rgba(234,242,240,${haze})`;ctx.fillRect(0,0,w,h);
-    ctx.globalCompositeOperation='screen';this.drawStream({x:-w*.13,y:h*.74},{x:w*.65,y:h*.40},.94,.70);ctx.restore();
+    const penetration=journeyRange(elapsed,2900,3800),haze=.02+Math.sin(penetration*Math.PI)*.065;ctx.fillStyle=`rgba(234,242,240,${haze})`;ctx.fillRect(0,0,w,h);ctx.restore();
   }
   drawDestination(elapsed){
-    const ctx=this.context,w=innerWidth,h=innerHeight,arrival=journeyRange(elapsed,4450,5750);if(!arrival)return;ctx.save();ctx.globalAlpha=arrival;
+    const ctx=this.context,w=innerWidth,h=innerHeight,arrival=journeyRange(elapsed,3750,4650);if(!arrival)return;ctx.save();ctx.globalAlpha=arrival;
     const backdrop=ctx.createLinearGradient(0,0,0,h);backdrop.addColorStop(0,'#15283b');backdrop.addColorStop(1,'#10151e');ctx.fillStyle=backdrop;ctx.fillRect(0,0,w,h);const photo=this.active.photo;
     if(photo.complete&&photo.naturalWidth>0){
-      // Same licensed destination photograph, not invented aerial geography; preserve its ratio.
-      const scale=Math.min(w/photo.naturalWidth,h/photo.naturalHeight),width=photo.naturalWidth*scale,height=photo.naturalHeight*scale,zoom=1.05-arrival*.05;
-      ctx.translate(w/2,h/2);ctx.scale(zoom,zoom);ctx.drawImage(photo,-width/2,-height/2,width,height);ctx.setTransform(this.ratio,0,0,this.ratio,0,0);this.canvas.dataset.destinationImage='ready';
+      // Cinematic city/landscape plate uses the same-book cover, not a frontal museum photo or invented aerial geography.
+      const travel=journeyRange(elapsed,3900,8000),scale=Math.max(w/photo.naturalWidth,h/photo.naturalHeight),zoom=1.14-travel*.055,width=photo.naturalWidth*scale*zoom,height=photo.naturalHeight*scale*zoom;
+      ctx.drawImage(photo,(w-width)/2+w*(.018-travel*.025),(h-height)/2+h*.045,width,height);this.canvas.dataset.destinationImage='ready';
     }else{this.drawCloudLayers(elapsed,.4);this.canvas.dataset.destinationImage=photo.complete?'unavailable':'loading';}
-    const shade=ctx.createLinearGradient(0,0,0,h);shade.addColorStop(0,'rgba(3,10,20,.07)');shade.addColorStop(.43,'rgba(3,10,20,0)');shade.addColorStop(1,'rgba(3,10,20,.42)');ctx.fillStyle=shade;ctx.fillRect(0,0,w,h);ctx.restore();
+    const shade=ctx.createLinearGradient(0,0,0,h);shade.addColorStop(0,'rgba(3,10,20,.50)');shade.addColorStop(.46,'rgba(3,10,20,.13)');shade.addColorStop(1,'rgba(3,10,20,.42)');ctx.fillStyle=shade;ctx.fillRect(0,0,w,h);ctx.restore();
+  }
+  drawBookTexture(image,quad,left=0,right=1){
+    const ctx=this.context,iw=image.width*(right-left),ih=image.height;
+    // Two native affine triangles map the readable cover onto its perspective quadrilateral.
+    for(let triangle=0;triangle<2;triangle++){
+      ctx.save();ctx.beginPath();const q=triangle?[quad[1],quad[2],quad[3]]:[quad[0],quad[1],quad[3]];q.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.clip();
+      if(!triangle){ctx.transform((quad[1].x-quad[0].x)/iw,(quad[1].y-quad[0].y)/iw,(quad[3].x-quad[0].x)/ih,(quad[3].y-quad[0].y)/ih,quad[0].x,quad[0].y);}
+      else{const a=(quad[2].x-quad[3].x)/iw,b=(quad[2].y-quad[3].y)/iw,c=(quad[2].x-quad[1].x)/ih,d=(quad[2].y-quad[1].y)/ih;ctx.transform(a,b,c,d,quad[1].x-a*iw,quad[1].y-b*iw);}
+      ctx.drawImage(image,image.width*left,0,iw,ih,0,0,iw,ih);ctx.restore();
+    }
+  }
+  drawPhysicalBook(){
+    const pose=this.bookPose;if(!pose||pose.alpha<=.002)return;
+    const ctx=this.context,w=this.bookWidth,h=w*1.30,open=pose.open,faces=[],rad=Math.PI/180;
+    const cy=Math.cos(pose.yaw*rad),sy=Math.sin(pose.yaw*rad),cx=Math.cos(pose.pitch*rad),sx=Math.sin(pose.pitch*rad),cz=Math.cos(pose.roll*rad),sz=Math.sin(pose.roll*rad);
+    const project=(x,y,z)=>{
+      x-=(1-open)*w*.5;const rx=x*cy+z*sy,rz=-x*sy+z*cy,ry=y*cx-rz*sx,depth=y*sx+rz*cx,perspective=1100/(1100-depth);
+      return {x:pose.x+(rx*cz-ry*sz)*perspective*pose.scale,y:pose.y+(rx*sz+ry*cz)*perspective*pose.scale,depth};
+    };
+    const vertex=(x,y,angle,depth,bend=0)=>{const a=angle*rad;return project(x*Math.cos(a)+depth*Math.sin(a),y,-x*Math.sin(a)+depth*Math.cos(a)+Math.sin(x/w*Math.PI)*bend);};
+    const face=(quad,kind,angle,index=0,extra={})=>{const value={quad,kind,angle,index,depth:quad.reduce((sum,p)=>sum+p.depth,0)/4,...extra};faces.push(value);return value;};
+    const addSheet=(angle,depth,bend,kind,index=0)=>{
+      const segments=7,gradStart=vertex(0,-h/2,angle,depth,bend),gradEnd=vertex(w,h/2,angle,depth,bend);
+      for(let strip=0;strip<segments;strip++){const left=w*strip/segments,right=w*(strip+1)/segments;face([vertex(left,-h/2,angle,depth,bend),vertex(right,-h/2,angle,depth,bend),vertex(right,h/2,angle,depth,bend),vertex(left,h/2,angle,depth,bend)],kind,angle,index,{left:strip/segments,right:(strip+1)/segments,strip,segments,gradStart,gradEnd});}
+      if(kind!=='paper')for(let edge=0;edge<4;edge++){
+        const corners=[[0,-h/2],[w,-h/2],[w,h/2],[0,h/2]],a=corners[edge],b=corners[(edge+1)%4];
+        face([vertex(...a,angle,depth),vertex(...b,angle,depth),vertex(...b,angle,depth-6),vertex(...a,angle,depth-6)],'edge',angle,index);
+      }
+    };
+    const right=-25*open,left=-151*open;
+    addSheet(right,-15,0,'back');
+    // Thin independently curved folios fan into a horizontal V, never vertical CSS shutters.
+    const finalAngles=[-27,-29,-32,-38,-55,-82,-116,-139,-145,-148,-150];
+    for(let i=0;i<11;i++){
+      const fan=journeyRange(open,.04+i*.018,.94),regular=right+(left-right)*(i+1)/12*fan,settled=journeyRange(open,.58,1),angle=regular+(finalAngles[i]-regular)*settled;
+      addSheet(angle,-9+i*1.35,Math.sin(i/10*Math.PI)*w*.085*fan,'paper',i);
+    }
+    addSheet(left,12,0,'cover');faces.sort((a,b)=>a.depth-b.depth);
+    ctx.save();ctx.globalAlpha*=pose.alpha;
+    // A displaced soft shadow grounds the volume without turning it into a neon rectangle.
+    ctx.save();ctx.filter='blur(18px)';ctx.fillStyle='#02050965';ctx.beginPath();ctx.ellipse(pose.x+w*.02,pose.y+h*.44,w*.65*pose.scale,h*.10*pose.scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
+    for(const f of faces){
+      const q=f.quad;ctx.beginPath();q.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
+      const gs=f.gradStart||q[0],ge=f.gradEnd||q[2],g=ctx.createLinearGradient(gs.x,gs.y,ge.x+.01,ge.y+.01);
+      if(f.kind==='paper'){const shade=Math.round(224+Math.sin((f.angle+90)*rad)*15);g.addColorStop(0,`rgb(${shade},${shade-14},${shade-38})`);g.addColorStop(.38,'#f1dfb6');g.addColorStop(1,'#b6a17a');}
+      else if(f.kind==='edge'){g.addColorStop(0,'#b2813c');g.addColorStop(.45,'#f3d895');g.addColorStop(1,'#7c542d');}
+      else{g.addColorStop(0,'#c5a36b');g.addColorStop(.12,'#5e4934');g.addColorStop(1,'#33271f');}
+      ctx.fillStyle=g;ctx.fill();ctx.strokeStyle=f.kind==='paper'?'#ffebbbc0':'#ffe0a1';ctx.lineWidth=f.kind==='paper'?.75:1.4;
+      ctx.beginPath();ctx.moveTo(q[0].x,q[0].y);ctx.lineTo(q[1].x,q[1].y);ctx.moveTo(q[3].x,q[3].y);ctx.lineTo(q[2].x,q[2].y);if(f.strip===0){ctx.moveTo(q[0].x,q[0].y);ctx.lineTo(q[3].x,q[3].y);}if(f.strip===f.segments-1){ctx.moveTo(q[1].x,q[1].y);ctx.lineTo(q[2].x,q[2].y);}ctx.stroke();
+      const winding=(q[1].x-q[0].x)*(q[3].y-q[0].y)-(q[1].y-q[0].y)*(q[3].x-q[0].x);
+      if(f.kind==='cover'&&winding>0&&this.coverTexture)this.drawBookTexture(this.coverTexture,q,f.left,f.right);
+      if(f.kind==='paper'&&f.index%3===1){
+        ctx.strokeStyle='#69553418';ctx.lineWidth=.45;
+        for(let line=0;line<17;line++){const t=.20+line*.033;ctx.beginPath();ctx.moveTo(q[0].x+(q[3].x-q[0].x)*t,q[0].y+(q[3].y-q[0].y)*t);ctx.lineTo(q[1].x+(q[2].x-q[1].x)*t,q[1].y+(q[2].y-q[1].y)*t);ctx.stroke();}
+      }
+    }
+    ctx.restore();this.canvas.dataset.bookPitch=pose.pitch.toFixed(1);this.canvas.dataset.bookOpen=open.toFixed(4);this.canvas.dataset.bookGeometry='perspective-hardcover-fan';
   }
   drawBookAura(elapsed,amount){
-    if(amount<=0)return;const ctx=this.context,w=innerWidth,h=innerHeight,cx=w*.54,cy=h*.54,t=(elapsed-6000)/1000;ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=amount;this.glow(cx,cy,Math.min(w,h)*.31,.22);
+    if(amount<=0)return;const ctx=this.context,w=innerWidth,h=innerHeight,cx=w*.52,cy=h*.56,t=(elapsed-4850)/1000;ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=amount;this.glow(cx,cy,Math.min(w,h)*.26,.26);
     const colors=['113,221,255','173,152,255','244,164,222','255,221,154'];
-    for(let line=0;line<4;line++){
-      ctx.lineWidth=.8;ctx.strokeStyle=`rgba(${colors[line]},.39)`;ctx.shadowColor=`rgb(${colors[line]})`;ctx.shadowBlur=10;ctx.beginPath();
-      for(let j=0;j<100;j++){const a=j/99*Math.PI*2+t*.23+line*.8,r=this.bookWidth*(.64+.14*Math.sin(a*2+t)),x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r*.6+Math.sin(a*2+t)*this.bookWidth*.19;if(j)ctx.lineTo(x,y);else ctx.moveTo(x,y);}ctx.stroke();
-    }
-    ctx.shadowBlur=7;for(let i=0;i<45;i++){const a=journeySeed(i+67)*Math.PI*2+t*(.1+journeySeed(i)*.3),r=this.bookWidth*(.61+journeySeed(i+81)*.6),x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r*.80;ctx.fillStyle=`rgba(${colors[i%4]},${.25+journeySeed(i+2)*.57})`;ctx.beginPath();ctx.arc(x,y,.65+journeySeed(i+4)*1.2,0,Math.PI*2);ctx.fill();}ctx.restore();
+    for(let line=0;line<9;line++){
+      const rise=((t*.21+line/9)%1),topX=cx+Math.sin(line*2.1+t*.4)*this.bookWidth*1.12,topY=cy-this.bookWidth*(.4+rise*1.24),bottomY=cy+this.bookWidth*.28;
+      const gradient=ctx.createLinearGradient(cx,bottomY,topX,topY);gradient.addColorStop(0,`rgba(${colors[line%4]},0)`);gradient.addColorStop(.6,`rgba(${colors[line%4]},.26)`);gradient.addColorStop(1,`rgba(${colors[line%4]},.65)`);
+      ctx.lineWidth=.8;ctx.strokeStyle=gradient;ctx.shadowColor=`rgb(${colors[line%4]})`;ctx.shadowBlur=8;ctx.beginPath();ctx.moveTo(cx+(line-4)*4,bottomY);ctx.bezierCurveTo(cx+Math.sin(t+line)*this.bookWidth*.8,cy-this.bookWidth*.3,topX-this.bookWidth*.3,topY+50,topX,topY);ctx.stroke();this.glow(topX,topY,8,.38,'blue');
+    }ctx.restore();
   }
   positionBook(elapsed,state){
-    const w=innerWidth,h=innerHeight,a=this.active;if(this.globe.reducedMotion){this.card.style.opacity='0';return;}
+    const w=innerWidth,h=innerHeight,a=this.active;this.card.style.opacity='0';
+    if(this.globe.reducedMotion){this.bookPose=null;return;}
     if(state.phase==='departure'){
       const t=journeySmooth(state.progress),p=journeyCurve({x:a.origin.x*w,y:a.origin.y*h},{x:a.target.x*w,y:a.target.y*h},t,h),size=Math.max(.008,(a.sourceWidth/this.bookWidth)*(1-Math.pow(t,.85)));
-      this.card.style.opacity=String(1-journeyRange(state.progress,.48,.96));this.card.style.transform=`translate3d(${p.x}px,${p.y}px,0) translate(-50%,-50%) perspective(1300px) rotateY(${-20-t*55}deg) rotateZ(${-8-t*23}deg) scale(${size})`;return;
+      this.bookPose={x:p.x,y:p.y,scale:size,alpha:1-journeyRange(state.progress,.35,.95),open:0,pitch:-8,yaw:-18-t*40,roll:-9-t*20};return;
     }
-    const appear=journeyRange(elapsed,5960,7120),open=journeyRange(elapsed,7440,9360),float=Math.sin((elapsed-6000)*.0015)*5;
-    this.card.style.opacity=String(appear*(1-journeyRange(elapsed,9430,9600)));this.card.style.transform=`translate3d(${w*(.54+open*.045)}px,${h*.53+float}px,0) translate(-50%,-50%) perspective(1400px) rotateX(${10-open*6}deg) rotateY(${-22+open*10}deg) rotateZ(${-6+Math.sin(elapsed*.001)*1.8}deg) scale(${.65+appear*.35})`;
-    this.card.style.setProperty('--cover-angle',`${-150*open}deg`);this.card.style.setProperty('--book-light',String(.45+Math.sin(clamp((elapsed-5960)/1160,0,1)*Math.PI)*.55));
-    this.card.querySelectorAll('.j-book-turning').forEach((leaf,index)=>{leaf.style.setProperty('--page-angle',`${-(134-index*23)*journeyRange(elapsed,7620+index*100,9150+index*65)}deg`);});
+    const appear=journeyRange(elapsed,4860,5550),open=journeyRange(elapsed,6160,7790),float=Math.sin((elapsed-4850)*.0016)*5;
+    this.bookPose={x:w*.52,y:h*.53+float,scale:.22+appear*.78,alpha:appear*(1-journeyRange(elapsed,7880,8000)),open,pitch:-9+open*69,yaw:-17+open*14,roll:-13+open*19};
+    this.card.style.setProperty('--cover-angle',`${-151*open}deg`);
   }
   frame(time){
     if(!this.active)return;const a=this.active,elapsed=time-a.start,state=journeyPhase(elapsed,this.globe.reducedMotion),ctx=this.context,w=innerWidth,h=innerHeight;
     document.body.dataset.journey=state.phase;this.canvas.dataset.progress=state.progress.toFixed(4);this.canvas.dataset.totalProgress=state.totalProgress.toFixed(4);
     if(state.phase==='complete'){const book=a.book;this.clear();this.onComplete(book);return;}
-    ctx.clearRect(0,0,w,h);this.positionBook(elapsed,state);
+    ctx.clearRect(0,0,w,h);this.frameElapsed=elapsed;this.positionBook(elapsed,state);
     if(this.globe.reducedMotion){ctx.fillStyle=`rgba(237,231,218,${journeySmooth(state.progress)})`;ctx.fillRect(0,0,w,h);this.requestFrame();return;}
-    if(state.phase==='departure')this.drawStream({x:a.origin.x*w,y:a.origin.y*h},{x:a.target.x*w,y:a.target.y*h},state.progress,.84);
-    const spaceOpacity=journeyRange(elapsed,650,1220);if(spaceOpacity)this.drawSpace(elapsed,spaceOpacity);
-    this.drawAtmosphere(elapsed);this.drawCloudSea(elapsed);this.drawDestination(elapsed);this.drawBookAura(elapsed,journeyRange(elapsed,5850,6750)*(1-journeyRange(elapsed,9350,9600)));
-    const veil=journeyRange(elapsed,9350,9600);if(veil){ctx.fillStyle=`rgba(237,231,218,${veil})`;ctx.fillRect(0,0,w,h);}this.requestFrame();
+    const spaceOpacity=journeyRange(elapsed,490,950);if(spaceOpacity)this.drawSpace(elapsed,spaceOpacity);
+    this.drawAtmosphere(elapsed);this.drawCloudSea(elapsed);this.drawDestination(elapsed);
+    if(state.phase==='departure')this.drawStream({x:a.origin.x*w,y:a.origin.y*h},{x:a.target.x*w,y:a.target.y*h},state.progress,.88);
+    else if(elapsed<5450){
+      const settle=journeyRange(elapsed,550,1500),arrive=journeyRange(elapsed,3950,5180),camera=journeyRange(elapsed,1700,3850);
+      const head={x:w*((a.target.x+(.64-a.target.x)*settle)*(1-arrive)+.52*arrive),y:h*((a.target.y+(.44-a.target.y)*settle)*(1-arrive)+.53*arrive)};
+      this.drawStream({x:-w*.19,y:h*(1.04-camera*.12)},head,1,(1-journeyRange(elapsed,4860,5450))*.97);
+    }
+    this.drawBookAura(elapsed,journeyRange(elapsed,5150,6350)*(1-journeyRange(elapsed,7810,8000)));this.drawPhysicalBook();
+    const veil=journeyRange(elapsed,7830,8000);if(veil){ctx.fillStyle=`rgba(237,231,218,${veil})`;ctx.fillRect(0,0,w,h);}this.requestFrame();
   }
 }
 
-// The blue orbital ribbons are an authored navigation effect, not measured star trails.
+// One analytically projected, three-sample nebula volume. The annulus is a
+// flowing density field, never a stack of stroked or parallel ellipse paths.
+class NebulaRingRenderer {
+  constructor(canvas){
+    this.canvas=canvas;
+    this.gl=canvas.getContext('webgl',{alpha:true,antialias:false,premultipliedAlpha:false,depth:false,stencil:false});
+    if(!this.gl)throw new Error('Volumetric nebula requires WebGL');
+    this.initialize();
+    canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();this.lost=true;canvas.dataset.renderer='unavailable';});
+    canvas.addEventListener('webglcontextrestored',()=>{this.lost=false;this.initialize();});
+  }
+  initialize(){
+    const gl=this.gl;
+    const vertex=`attribute vec2 aPosition;void main(){gl_Position=vec4(aPosition,0.,1.);}`;
+    const fragment=`
+      precision highp float;
+      uniform vec2 uResolution;
+      uniform vec2 uViewport;
+      uniform vec2 uCenter;
+      uniform float uUnit;
+      uniform float uRadius;
+      uniform float uTime;
+      uniform float uAlpha;
+      uniform float uFormation;
+      uniform vec4 uBodies[10];
+      const float PI=3.14159265359;
+      float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}
+      float noise(vec2 p){
+        vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+        return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);
+      }
+      float fbm(vec2 p){
+        float sum=0.,weight=.55;mat2 turn=mat2(.8,-.6,.6,.8);
+        for(int n=0;n<4;n++){sum+=weight*noise(p);p=turn*p*2.07+vec2(13.7,7.1);weight*=.47;}
+        return sum;
+      }
+      float foregroundMask(vec2 pixel,float depth){
+        vec2 delta=pixel-uCenter;float radial=dot(delta,delta);
+        if(radial<uRadius*uRadius&&depth<sqrt(max(0.,uRadius*uRadius-radial))/uUnit)return 0.;
+        for(int i=0;i<10;i++){
+          vec4 body=uBodies[i];vec2 d=pixel-body.xy;float r2=body.z*body.z;
+          if(body.z>0.&&dot(d,d)<r2&&depth<body.w+sqrt(max(0.,r2-dot(d,d)))/uUnit)return 0.;
+        }
+        return 1.;
+      }
+      void main(){
+        vec2 pixel=vec2(gl_FragCoord.x/uResolution.x,1.-gl_FragCoord.y/uResolution.y)*uViewport;
+        vec2 screen=(pixel-uCenter)/uUnit;
+        if(abs(screen.x)>4.8||abs(screen.y)>2.65||uAlpha<.001||uFormation<.001){gl_FragColor=vec4(0.);return;}
+        float roll=-.18,c=cos(roll),s=sin(roll);
+        vec2 view=vec2(screen.x*c+screen.y*s,-screen.x*s+screen.y*c);
+        float tilt=.32,tangent=tan(tilt),cosine=cos(tilt);
+        float mass=0.,filaments=0.,dust=0.;
+        // Three height slices integrate the soft volume thickness. Their turbulent
+        // density is continuous, rather than three visible geometric ring lines.
+        for(int layer=0;layer<3;layer++){
+          float h=(float(layer)-1.)*.105;
+          float divisor=tangent+view.y/12.;
+          if(abs(divisor)<.025)continue;
+          float depth=(view.y-h)/divisor;
+          if(abs(depth)>5.8)continue;
+          vec2 q=vec2(view.x*(1.-depth/12.),depth/cosine);
+          float radius=length(q);
+          if(radius<1.95||radius>3.95)continue;
+          float visible=foregroundMask(pixel,depth);
+          if(visible<.01)continue;
+          float angle=atan(q.y,q.x),time=uTime*.15;
+          vec2 flow=vec2(radius*4.8,0.)+vec2(cos(angle-time*.28),sin(angle-time*.28))*3.2;
+          float bend=fbm(vec2(cos(angle)*2.2,sin(angle)*2.2)+time*.22)-.5;
+          float warp=.16*bend+.035*sin(angle*5.-time);
+          float radial=(radius-2.83-warp)/.44;
+          float envelope=exp(-radial*radial*1.8);
+          float broad=fbm(flow+vec2(fbm(flow*.65+time),0.)*1.7);
+          float billow=fbm(q*3.9+vec2(-time,time*.5));
+          float irregular=smoothstep(.16,.69,broad*.7+billow*.42);
+          float spiral=sin(radius*8.5-angle*2.+time*1.7+bend*5.);
+          float strand=pow(max(0.,spiral*.5+.5),5.)*(.25+irregular);
+          float whorl=fract((angle+PI)/(2.*PI)-time*.035+1.);
+          float formation=smoothstep(0.,.12,uFormation)*(1.-smoothstep(uFormation*1.22,uFormation*1.22+.16,whorl));
+          float density=envelope*(.12+irregular*.62+strand*.42)*formation*visible;
+          mass+=density*.43;
+          filaments+=envelope*strand*irregular*.38*formation*visible;
+          // Sparse dust belongs to the nebula coordinates and travels within it;
+          // it is not a random screen-space star field or a planet-attached tail.
+          vec2 grain=vec2(angle*61.-time*.9,radius*99.+bend*4.);
+          vec2 cell=floor(grain),local=fract(grain)-.5;
+          float seed=hash(cell),spark=exp(-dot(local,local)*110.);
+          dust+=spark*smoothstep(.978,.998,seed)*envelope*formation*visible*.9;
+        }
+        float alpha=(1.-exp(-mass*1.75))*uAlpha;
+        vec3 blue=vec3(.055,.21,.80),cyan=vec3(.14,.83,1.);
+        vec3 color=mix(blue,cyan,clamp(filaments*2.5+.18,0.,.92));
+        color+=vec3(.28,.62,.90)*filaments+vec3(.7,.92,1.)*dust;
+        alpha=clamp(alpha+dust*uAlpha*.62,0.,.84);
+        gl_FragColor=vec4(color,alpha);
+      }
+    `;
+    const compile=(type,source)=>{const shader=gl.createShader(type);gl.shaderSource(shader,source);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(shader));return shader;};
+    const program=gl.createProgram();gl.attachShader(program,compile(gl.VERTEX_SHADER,vertex));gl.attachShader(program,compile(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);
+    if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));
+    this.program=program;gl.useProgram(program);
+    this.vertices=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,this.vertices);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+    const location=gl.getAttribLocation(program,'aPosition');gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,2,gl.FLOAT,false,0,0);
+    this.uniforms=Object.fromEntries(['uResolution','uViewport','uCenter','uUnit','uRadius','uTime','uAlpha','uFormation','uBodies[0]'].map(name=>[name,gl.getUniformLocation(program,name)]));
+    this.bodies=new Float32Array(40);gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.clearColor(0,0,0,0);
+    this.canvas.dataset.renderer='volumetric-fbm';
+  }
+  draw(globe,seconds,alpha,formation=1){
+    if(this.lost)return;
+    const gl=this.gl,ratio=Math.min(globe.ratio??1,globe.width<720?1:1.25);
+    const width=Math.round(globe.width*ratio),height=Math.round(globe.height*ratio);
+    if(this.canvas.width!==width||this.canvas.height!==height){this.canvas.width=width;this.canvas.height=height;gl.viewport(0,0,width,height);}
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    if(alpha<.001)return;
+    gl.useProgram(this.program);
+    gl.uniform2f(this.uniforms.uResolution,width,height);gl.uniform2f(this.uniforms.uViewport,globe.width,globe.height);
+    gl.uniform2f(this.uniforms.uCenter,globe.centerX,globe.restCenterY);gl.uniform1f(this.uniforms.uUnit,Math.max(1,globe.planetUnit));
+    gl.uniform1f(this.uniforms.uRadius,globe.baseRadius*globe.scale);gl.uniform1f(this.uniforms.uTime,seconds);gl.uniform1f(this.uniforms.uAlpha,alpha);gl.uniform1f(this.uniforms.uFormation,formation);
+    this.bodies.fill(0);
+    for(let i=0;i<Math.min(10,(globe.planetMeshes??[]).length);i++){
+      const p=globe.planetMeshes[i];this.bodies.set([p.x,p.y,p.visibleSize*.5*Math.sqrt(Math.max(0,p.alpha??1)),p.z],i*4);
+    }
+    gl.uniform4fv(this.uniforms['uBodies[0]'],this.bodies);gl.drawArrays(gl.TRIANGLES,0,6);
+    this.canvas.dataset.formation=formation.toFixed(3);this.canvas.dataset.alpha=alpha.toFixed(3);
+  }
+}
+
+// Reference-led four-second opening. All positions derive from one timeline and
+// one observer; no endlessly bobbing hand or geometric line-ring substitute.
+const cosmicSmooth=(a,b,value)=>{const p=Math.max(0,Math.min(1,(value-a)/(b-a)));return p*p*(3-2*p);};
+function cosmicIntroPose(milliseconds,reducedMotion=false){
+  const t=reducedMotion?4:Math.max(0,milliseconds/1000);
+  const complete=t>=4;
+  const advance=cosmicSmooth(.8,3.85,t);
+  return {seconds:Math.min(4,t),active:!complete,
+    phase:t<.35?'black':t<.9?'fist':t<1.45?'unfurl':t<2.15?'rise':t<3.05?'satellites':t<3.55?'vortex':t<4?'closeup':'complete',
+    veil:1-cosmicSmooth(.35,.78,t),
+    reveal:cosmicSmooth(.62,1.04,t),
+    scale:.20+.92*advance,
+    center:.54-.11*cosmicSmooth(.8,2.2,t),
+    core:cosmicSmooth(2.60,3.75,t),
+    formation:cosmicSmooth(.95,1.85,t),
+    fist:cosmicSmooth(.39,.70,t)*(1-cosmicSmooth(.89,1.17,t)),
+    unfurl:cosmicSmooth(.84,1.10,t)*(1-cosmicSmooth(1.19,1.46,t)),
+    hand:cosmicSmooth(1.14,1.46,t)*(1-cosmicSmooth(3.34,4,t)),
+    handEnter:1-cosmicSmooth(.40,.86,t),
+    handExit:cosmicSmooth(3.25,4,t),
+  };
+}
+
 function cosmosPoint(angle,radius,tilt,roll,globe) {
   const x=Math.cos(angle)*radius,y=Math.sin(angle)*radius*Math.sin(tilt),z=Math.sin(angle)*radius*Math.cos(tilt);
   const c=Math.cos(roll),s=Math.sin(roll),p=12/(12-z),u=globe.planetUnit;
   return {x:globe.centerX+(x*c-y*s)*u*p,y:globe.restCenterY+(x*s+y*c)*u*p,z,depth:z/3.3,perspective:p};
 }
+function cosmosOrbit(index){
+  return {radius:index<7?2.48+(index%4)*.23:2.20+(index-7)*.08,
+    tilt:(index<7?16+index*1.4:39+(index-7)*24)*Math.PI/180,
+    roll:-.18+(index>=7?(index-8)*.39:0),physicalRadius:.13+(index%3)*.027};
+}
+// Exact extrema of (A cos(t)+B sin(t))/(1-K sin(t)). Fitting the whole
+// perspective orbit once avoids clipping at phases missed by sampled bounds.
+function cosmicProjectionBounds(radius,tilt,roll){
+  const k=radius*Math.cos(tilt)/12,denominator=1-k*k;
+  const extrema=(a,b)=>{const spread=Math.sqrt(b*b+denominator*a*a);return [(b*k-spread)/denominator,(b*k+spread)/denominator];};
+  return {x:extrema(radius*Math.cos(roll),-radius*Math.sin(tilt)*Math.sin(roll)),
+    y:extrema(radius*Math.sin(roll),radius*Math.sin(tilt)*Math.cos(roll)),maxPerspective:1/(1-Math.abs(k))};
+}
+function cosmicObserverFit(globe,scale=1.12,center=.43){
+  const unit=(globe.planetBaseUnit??globe.planetUnit)*scale;
+  const margin=Math.min(20,globe.width*.04,globe.height*.03);
+  const available=[globe.centerX-margin,globe.width-globe.centerX-margin,globe.height*center-margin,globe.height*(1-center)-margin];
+  let fit=1;
+  for(let index=0;index<10;index++){
+    const orbit=cosmosOrbit(index),bounds=cosmicProjectionBounds(orbit.radius,orbit.tilt,orbit.roll);
+    const extent=[-bounds.x[0],bounds.x[1],-bounds.y[0],bounds.y[1]],body=orbit.physicalRadius*bounds.maxPerspective;
+    for(let side=0;side<4;side++){
+      // Both the physical sphere and the accessible minimum 30px target fit.
+      fit=Math.min(fit,(available[side]-15)/(unit*extent[side]),available[side]/(unit*(extent[side]+body)));
+    }
+  }
+  return Math.max(.25,Math.min(1,fit));
+}
 class HandheldCosmos {
-  constructor(globe){this.globe=globe;this.hand=document.querySelector('#supportingHand');}
+  constructor(globe){
+    this.globe=globe;this.hand=document.querySelector('#supportingHand');this.fist=document.querySelector('#cosmicFist');this.unfurl=document.querySelector('#cosmicUnfurl');this.veil=document.querySelector('#cosmicIntroVeil');
+    this.startTime=null;this.elapsed=globe.reducedMotion?4000:0;this.pose=cosmicIntroPose(this.elapsed,globe.reducedMotion);
+    const canvas=document.querySelector('#nebulaCanvas');
+    try{this.nebula=canvas&&typeof NebulaRingRenderer!=='undefined'?new NebulaRingRenderer(canvas):null;}
+    catch(error){this.nebula=null;if(canvas)canvas.dataset.renderer='unavailable';console.info('Nebula renderer unavailable',error.message);}
+  }
+  get active(){return this.pose.active;}
+  replay(){
+    this.startTime=null;this.elapsed=this.globe.reducedMotion?4000:0;this.skipped=false;
+    if(this.globe.sceneController){this.globe.sceneController.target=0;this.globe.sceneController.progress=0;}
+  }
+  skip(){this.skipped=true;this.elapsed=4000;this.pose=cosmicIntroPose(4000);this.applyPresentation();}
+  update(time){
+    const g=this.globe;
+    if(this.startTime===null&&(g.ready||g.meshRenderer?.ready||g.reducedMotion))this.startTime=time+100;
+    this.elapsed=g.reducedMotion||this.skipped?4000:this.startTime===null?0:Math.max(0,time-this.startTime);
+    this.pose=cosmicIntroPose(this.elapsed,g.reducedMotion);
+    this.observerFit=cosmicObserverFit(g,this.pose.scale,this.pose.center);
+    g.cosmicIntroActive=this.pose.active;g.cosmicIntroCenter=this.pose.center;g.cosmicIntroScale=this.pose.scale*this.observerFit;
+    g.cosmicReveal=this.pose.reveal;g.energyStrength=1-(g.libraryBlend??0);g.energyCore=this.pose.core;g.energyTime=g.reducedMotion?0:time/1000;
+    this.applyPresentation();
+  }
+  applyPresentation(){
+    const p=this.pose,g=this.globe;
+    if(this.veil)this.veil.style.opacity=String(p.veil);
+    document.body.classList.toggle('cosmic-intro-active',p.active);
+    document.body.dataset.cosmicIntroPhase=p.phase;
+    document.body.dataset.cosmicIntroProgress=(p.seconds/4).toFixed(4);
+    const width=Math.min(g.width*.77,g.height*1.16),radius=g.planetRadius*(g.cosmicIntroScale??p.scale);
+    const cy=g.height*p.center,exit=p.handExit*g.height*.29;
+    for(const [node,opacity,size] of [[this.fist,p.fist,.66],[this.unfurl,p.unfurl,.86],[this.hand,p.hand,1]]){
+      if(!node)continue;
+      const w=width*size;
+      node.style.width=`${w.toFixed(2)}px`;node.style.left=`${(g.centerX-w*.49+p.handEnter*g.width*.34).toFixed(2)}px`;
+      node.style.top=`${(cy+radius*.60+exit).toFixed(2)}px`;node.style.opacity=String(opacity*(1-(g.libraryBlend??0)));
+      node.style.transform=`rotate(${p.handEnter*11-p.handExit*4}deg)`;
+    }
+  }
   planetPose(index,seconds){
-    const g=this.globe,radius=index<7?2.5+(index%4)*.20:2.04+(index-7)*.03,tilt=(index<7?18+index*2:48+(index-7)*21)*Math.PI/180;
+    const g=this.globe,{radius,tilt,roll,physicalRadius}=cosmosOrbit(index);
     const mean=index*2.39996+seconds*(.10/(radius/2.5)**1.5)*(index===8?-1:1);
-    const point=cosmosPoint(mean,radius,tilt,-.18+(index>=7?(index-8)*.50:0),g),physicalRadius=.12+(index%3)*.025;
+    const point=cosmosPoint(mean,radius,tilt,roll,g);
     const size=physicalRadius*2*g.planetUnit*point.perspective;
-    return {...point,scale:1,width:Math.max(30,size),height:Math.max(30,size),turn:0,roll:0,physicalRadius,visibleSize:size};
+    const starts=index<5?2.10+index*.065:2.55+(index-5)*.13;
+    const planetAlpha=g.reducedMotion?1:cosmicSmooth(starts,starts+.18,this.pose.seconds);
+    return {...point,scale:1,width:Math.max(30,size),height:Math.max(30,size),turn:0,roll:0,physicalRadius,visibleSize:size,planetAlpha};
   }
   decorations(seconds,alpha){
-    return Array.from({length:18},(_,i)=>{
-      const radius=2.62+(i%5)*.14,p=cosmosPoint(i*2.39996+seconds*.075, radius,.30+(i%3)*.08,-.18,this.globe),physicalRadius=.025+(i%4)*.008;
-      return {...p,index:i%10,physicalRadius,visibleSize:physicalRadius*2*this.globe.planetUnit*p.perspective,alpha};
+    const birth=cosmicSmooth(2.8,3.4,this.pose.seconds);
+    return Array.from({length:4},(_,i)=>{
+      const radius=2.72+i*.13,p=cosmosPoint(i*2.39996+seconds*.075,radius,.30+(i%3)*.06,-.18,this.globe),physicalRadius=.022+(i%3)*.007;
+      return {...p,index:i+4,physicalRadius,visibleSize:physicalRadius*2*this.globe.planetUnit*p.perspective,alpha:alpha*birth};
     });
   }
   occluded(p){const g=this.globe,dx=p.x-g.centerX,dy=p.y-g.restCenterY,r=g.baseRadius*g.scale,d=dx*dx+dy*dy;return d<r*r&&p.z*g.planetUnit<Math.sqrt(r*r-d);}
   draw(time,alpha){
     const g=this.globe,seconds=g.reducedMotion?0:time/1000;
-    if(this.hand){
-      const width=g.baseRadius*3.7;
-      this.hand.style.width=`${width}px`;this.hand.style.left=`${g.centerX-width*.43}px`;this.hand.style.top=`${g.restCenterY+g.baseRadius*.73}px`;
-      this.hand.style.opacity=String(alpha);this.hand.style.transform=`translateY(${g.reducedMotion?0:Math.sin(seconds*.45)*2}px)`;
-    }
-    if(alpha<=.001)return;
-    const back=g.orbitContext,front=g.effectsContext;
-    const line=(points,ctx,near,color,width,blur)=>{
-      ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.lineWidth=width;ctx.shadowBlur=blur;ctx.shadowColor='#238eff';ctx.beginPath();let pen=false;
-      for(const p of points){if((p.z>0)!==near||near&&this.occluded(p)){pen=false;continue;}if(pen)ctx.lineTo(p.x,p.y);else{ctx.moveTo(p.x,p.y);pen=true;}}
-      ctx.stroke();ctx.restore();
-    };
-    // Continuous ribbons use a single inclined annulus. Small orbital particles are
-    // sampled in its own plane; they are not random stars or planet-attached tails.
-    for(let band=0;band<25;band++){
-      const r=2.35+band*.035,phase=seconds*.12+band*.29;
-      const points=Array.from({length:181},(_,j)=>{const a=j*Math.PI*2/180;return cosmosPoint(a,r+.035*Math.sin(a*4+phase)+.018*Math.cos(a*9-phase),.31+.018*Math.sin(band),-.18,g);});
-      const core=band%5===0,color=core?'rgba(67,168,255,.40)':'rgba(27,77,241,.10)';
-      for(const [ctx,near] of [[back,false],[front,true]])line(points,ctx,near,color,core?4:2,core?22:12);
-    }
-    // Broad light packets drift within the annulus, rather than bright tails
-    // being attached to every planet. A thin cyan filament sits inside each glow.
-    for(let packet=0;packet<12;packet++){
-      const start=seconds*.11+packet*2.399963,r=2.40+(packet%6)*.117;
-      const points=Array.from({length:55},(_,j)=>{const a=start+j/54*(.38+(packet%4)*.14);return cosmosPoint(a,r+.026*Math.sin(a*5+seconds*.16),.31,-.18,g);});
-      for(const [ctx,near] of [[back,false],[front,true]]){
-        line(points,ctx,near,'rgba(35,121,255,.18)',11,28);
-        line(points,ctx,near,'rgba(90,204,255,.38)',1.4,10);
-      }
-    }
-    for(let i=0;i<420;i++){
-      const a=i*2.399963+seconds*(.035+(i%5)*.004),r=2.38+((i*73)%419)/419*.89;
-      const p=cosmosPoint(a,r,.31+(i%11-5)*.002,-.18,g),ctx=p.z>0?front:back;
-      if(p.z>0&&this.occluded(p))continue;
-      ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha*(.18+(i%7)*.07);ctx.fillStyle=i%11===0?'#e0f8ff':'#4c9dff';
-      const size=i%31===0?2:.40+(i%4)*.18;if(i%17===0){ctx.shadowBlur=7;ctx.shadowColor='#28a6ff';}ctx.beginPath();ctx.arc(p.x,p.y,size,0,Math.PI*2);ctx.fill();ctx.restore();
-    }
-    // Two restrained outer guides show that the navigation planets have distinct planes.
-    for(const index of [7,9]){
-      const points=Array.from({length:181},(_,j)=>cosmosPoint(j*Math.PI*2/180,2.04+(index-7)*.03,(48+(index-7)*21)*Math.PI/180,-.18+(index-8)*.5,g));
-      line(points,back,false,'rgba(93,132,198,.16)',.65,0);line(points,front,true,'rgba(109,163,223,.20)',.65,0);
-    }
+    this.nebula?.draw(g,seconds,alpha*this.pose.reveal,this.pose.formation);
   }
 }
 
@@ -1504,7 +1839,8 @@ function updateProjection() {
   document.querySelector('#projectionCone').setAttribute('points', `${point.x},${point.y} ${x + width*.45},${y + height} ${x + width*.67},${y + height}`);
   document.querySelector('#projectionLine').setAttribute('d', `M${x + width*.45},${y + height} L${point.x},${point.y} L${x + width*.67},${y + height}`);
 }
-globe.onFrame = time => { navigation.update(time);orbital.update(time);if(globe.libraryBlend<1)globe.planetMeshes.push(...orbital.cosmos.decorations(orbital.seconds,1-globe.libraryBlend));updateProjection(); };
+globe.onFrame = time => { orbital.cosmos.update(time);navigation.update(time);orbital.update(time);if(globe.libraryBlend<1)globe.planetMeshes.push(...orbital.cosmos.decorations(orbital.seconds,1-globe.libraryBlend));updateProjection(); };
+document.querySelector('#replayCosmicIntro').addEventListener('click',()=>{if(reading||journey.active)return;setOrbitOpen(false);orbital.cosmos.replay();});
 toggleAtlas.addEventListener('click', () => setOrbitOpen(!orbital.opened));
 function openReader(book, updateHash = true) {
   selectedIndex = books.indexOf(book);

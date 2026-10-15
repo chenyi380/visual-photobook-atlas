@@ -1,5 +1,5 @@
-/* Authored from the uploaded cylindrical music-player reference. The complete
-   screen is sliced only for curvature; every label and control stays native. */
+/* One continuous curved glass silhouette, with borderless native content
+   projected onto the same cylinder. There are no independent glass tiles. */
 .orbital-book[data-player="travel"] {
   color:#fff9ed;
   cursor:pointer;
@@ -25,9 +25,56 @@
   backdrop-filter:none;
 }
 .travel-player .tile-segment {
+  left:0;
+  top:0;
+  z-index:3;
+  margin:0;
   overflow:hidden;
-  width:calc(var(--book-width) / 11 + .35px);
-  transform-style:preserve-3d;
+  width:calc(var(--book-width) / 31 + .45px);
+  height:100%;
+  transform-origin:0 0;
+  transform-style:flat;
+  backface-visibility:visible;
+  pointer-events:none;
+}
+.travel-player .player-glass {
+  position:absolute;
+  z-index:0;
+  inset:0;
+  display:block;
+  backdrop-filter:blur(5px) saturate(.82);
+  background:rgb(203 197 177 / 3%);
+  pointer-events:none;
+}
+.travel-player .player-shell {
+  position:absolute;
+  z-index:2;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  pointer-events:none;
+  filter:drop-shadow(0 8px 14px rgb(0 0 0 / 28%));
+}
+.player-shell .player-rim {
+  stroke-width:1.3px;
+  stroke-opacity:.85;
+  vector-effect:non-scaling-stroke;
+  stroke-linejoin:round;
+}
+.player-shell .player-surface {fill-opacity:.84;transition:fill-opacity .2s;}
+.orbital-book.active .player-shell .player-rim,
+.orbital-book:focus-visible .player-shell .player-rim {
+  stroke-width:1.8px;
+  stroke-opacity:1;
+}
+.orbital-book.active .player-shell .player-surface {fill-opacity:1;}
+.orbital-book[data-player="travel"]:focus-visible {outline:none;}
+.orbital-book:focus-visible .player-shell {filter:drop-shadow(0 0 3px #fff2d7) drop-shadow(0 7px 14px rgb(0 0 0 / 28%));}
+.travel-player .tile-face,
+.orbital-book.active .travel-player .tile-face {
+  left:calc(var(--segment) * var(--book-width) / -31);
 }
 .travel-player .tile-face,
 .orbital-book.active .travel-player .tile-face {
@@ -37,12 +84,12 @@
   justify-content:flex-start;
   gap:0;
   padding:calc(var(--book-width) * .068) calc(var(--book-width) * .088);
-  border:1px solid rgb(248 234 208 / 62%);
-  border-radius:12px;
-  background:linear-gradient(122deg,rgb(212 211 190 / 18%),rgb(56 58 59 / 30%) 40%,rgb(136 122 106 / 16%));
-  box-shadow:inset 0 1px 2px rgb(255 244 218 / 46%),inset 1px 0 3px rgb(178 211 242 / 18%),inset -1px 0 4px rgb(231 192 255 / 22%),0 15px 30px rgb(0 0 0 / 24%);
+  border:0;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
   color:#fff9ee;
-  backdrop-filter:blur(3px) saturate(.84);
+  backdrop-filter:none;
   font-family:'Atlas Player Sans','Microsoft YaHei',sans-serif;
   font-variant-numeric:tabular-nums;
   font-size:calc(var(--book-width) * .052);
@@ -50,11 +97,7 @@
   line-height:1.3;
   text-align:left;
   text-shadow:0 1px 4px rgb(1 5 9 / 75%);
-  transition:background .2s,border-color .2s;
-}
-.orbital-book.active .travel-player .tile-face {
-  border-color:rgb(255 244 221 / 94%);
-  background:linear-gradient(122deg,rgb(231 226 210 / 23%),rgb(66 68 67 / 36%) 40%,rgb(155 140 120 / 20%));
+  transition:none;
 }
 .player-heading {
   display:flex;
@@ -173,7 +216,7 @@
   stroke:none;
 }
 @media(max-width:720px) {
-  .travel-player .tile-face,.orbital-book.active .travel-player .tile-face {border-radius:7px;padding:calc(var(--book-width) * .07) calc(var(--book-width) * .08);}
+  .travel-player .tile-face,.orbital-book.active .travel-player .tile-face {padding:calc(var(--book-width) * .07) calc(var(--book-width) * .08);}
   .player-copy b {font-size:calc(var(--book-width) * .09);}
   .player-copy small {font-size:calc(var(--book-width) * .047);}
   .player-pagination {font-size:calc(var(--book-width) * .04);}

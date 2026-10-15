@@ -9,8 +9,8 @@ const [system,navigation,library,cosmos]=await Promise.all([
   'src/system-source.js','src/scene-navigation.js','src/orbit-library.js','src/handheld-cosmos.js',
 ].map(path=>readFile(new URL(path,root),'utf8')));
 const context=vm.createContext({performance:{now:()=>0},document:{querySelector:()=>null,body:{classList:{contains:()=>false}}}});
-vm.runInContext(`${system}\n${navigation}\n${library}\n${cosmos}\nthis.tools={StarGlobe,OrbitalLibrary,HandheldCosmos,bookOrbitTier,bookOrbitPoint,dampedOrbitStep,sceneNavigationPose,cosmosPoint};`,context);
-const {StarGlobe,OrbitalLibrary,HandheldCosmos,bookOrbitTier,bookOrbitPoint,dampedOrbitStep,sceneNavigationPose,cosmosPoint}=context.tools;
+vm.runInContext(`${system}\n${navigation}\n${library}\n${cosmos}\nthis.tools={StarGlobe,OrbitalLibrary,HandheldCosmos,bookOrbitTier,bookOrbitPoint,dampedOrbitStep,sceneNavigationPose,cosmosPoint,cylindricalPlayerGeometry};`,context);
+const {StarGlobe,OrbitalLibrary,HandheldCosmos,bookOrbitTier,bookOrbitPoint,dampedOrbitStep,sceneNavigationPose,cosmosPoint,cylindricalPlayerGeometry}=context.tools;
 
 // Exercise the actual resize contract, rather than copying scene constants into
 // the tests. None of these tests starts animation, a browser, or a renderer.
@@ -28,6 +28,40 @@ function globeFor(width,height,opened=false) {
 }
 const near=(actual,expected,epsilon=1e-9)=>assert.ok(Math.abs(actual-expected)<=epsilon,`${actual} differs from ${expected}`);
 const finite=(point,keys)=>keys.forEach(key=>assert.ok(Number.isFinite(point[key]),`${key}: ${point[key]}`));
+
+test('glass players have visibly bowed upper and lower edges, not rectangular rims',()=>{
+  for(const [width,height] of [[236,138],[180,105],[86,57]]) {
+    const geometry=cylindricalPlayerGeometry(width,height);
+    assert.equal(geometry.strips.length,31);
+    assert.ok(geometry.topBow>=height*.12,`top bow ${geometry.topBow} must be visible at ${width}px`);
+    assert.ok(geometry.bottomBow>=height*.12,`bottom bow ${geometry.bottomBow} must be visible at ${width}px`);
+    if(width===236){assert.ok(geometry.topBow>=20&&geometry.topBow<=28);}
+    assert.match(geometry.path,/^M/);assert.match(geometry.path,/ Z$/);assert.doesNotMatch(geometry.path,/NaN|Infinity|undefined/);
+    const railBow=geometry.project(.5,.48).y-(geometry.project(.1,.48).y+geometry.project(.9,.48).y)/2;
+    assert.ok(railBow>height*.08,'content rail follows the curved glass rather than remaining straight');
+    for(let u=0;u<=1;u+=.01)for(const v of [0,.5,1]) {
+      const p=geometry.project(u,v);finite(p,['x','y']);
+      assert.ok(p.x>=-.001&&p.x<=width+.001&&p.y>=-.001&&p.y<=height+.001);
+    }
+  }
+});
+
+test('borderless player content strips project continuously onto the single glass surface',()=>{
+  const geometry=cylindricalPlayerGeometry(236,138),height=138;
+  const map=(strip,x,y)=>{const [a,b,c,d,e,f]=strip.matrix;return{x:a*x+c*y+e,y:b*x+d*y+f};};
+  for(let index=0;index<geometry.strips.length;index++) {
+    const strip=geometry.strips[index],m=strip.matrix;
+    assert.ok(m.every(Number.isFinite));assert.ok(m[0]*m[3]-m[1]*m[2]>.5);
+    if(index===geometry.strips.length-1)continue;
+    for(const y of [0,height/2,height]) {
+      const right=map(strip,strip.width,y),left=map(geometry.strips[index+1],0,y);
+      assert.ok(Math.hypot(right.x-left.x,right.y-left.y)<.5,'adjacent content strips cannot leave a visible grid seam');
+    }
+  }
+  assert.match(library,/length:31/);
+  assert.match(library,/class="player-shell"/);
+  assert.match(library,/cylindricalPlayerGeometry\(pose\.width,pose\.height\)/);
+});
 
 test('reference players occupy exactly three shared cylindrical tiers',()=>{
   for(const [width,height] of [[1672,941],[1280,720],[390,844]]) {
@@ -137,15 +171,24 @@ test('cosmos projection is finite, periodic, and rotates true orbital planes',()
   near(rolled.y-globe.restCenterY,unrolled.x-globe.centerX);
 });
 
-test('navigation planets stay finite and wholly within the desktop viewport throughout their motion',()=>{
-  for(const [width,height] of [[1672,941],[1280,720],[390,844]]) {
+test('one fitted observer keeps whole orbital planes inside the viewport at the actual final 1.12 intro scale',()=>{
+  const fitObserver=vm.runInContext('cosmicObserverFit',context);
+  for(const [width,height] of [[1672,941],[1280,720],[390,844],[320,720]]) {
     const globe=globeFor(width,height),scene=new HandheldCosmos(globe);
+    scene.pose=vm.runInContext('cosmicIntroPose(4000)',context);
+    near(scene.pose.scale,1.12);
+    const fit=fitObserver(globe,scene.pose.scale,scene.pose.center);
+    assert.ok(fit>0&&fit<=1);
+    globe.cosmicIntroScale=scene.pose.scale*fit;
+    globe.baseRadius=globe.planetRadius*globe.cosmicIntroScale;
+    globe.planetUnit=globe.planetBaseUnit*globe.cosmicIntroScale;
+    globe.restCenterY=height*scene.pose.center;
     for(let frame=0;frame<=5400;frame++) {
       const seconds=frame/30;
       for(let index=0;index<10;index++) {
         const p=scene.planetPose(index,seconds);
         finite(p,['x','y','z','depth','perspective','width','height','visibleSize','physicalRadius']);
-        assert.ok(p.width>=30&&p.height>=30&&p.physicalRadius>0);
+        assert.ok(p.width>=30&&p.height>=30&&p.physicalRadius>0);assert.equal(p.planetAlpha,1);
         assert.ok(p.x-p.width/2>=0,`${width}x${height} frame ${frame} planet ${index}: left ${p.x-p.width/2}`);
         assert.ok(p.x+p.width/2<=width,`${width}x${height} frame ${frame} planet ${index}: right ${p.x+p.width/2}`);
         assert.ok(p.y-p.height/2>=0,`${width}x${height} frame ${frame} planet ${index}: top ${p.y-p.height/2}`);
@@ -161,9 +204,13 @@ test('cosmos occlusion distinguishes Earth, rear objects and foreground objects'
   assert.equal(scene.occluded({...center,z:-3}),true);
   assert.equal(scene.occluded({...center,z:3}),false);
   assert.equal(scene.occluded({x:globe.centerX+globe.baseRadius*2,y:globe.restCenterY,z:-3}),false);
+  assert.ok(scene.decorations(0,.37).every(point=>point.alpha===0),'decorations wait for the satellite-birth phase');
+  scene.pose=vm.runInContext('cosmicIntroPose(4000)',context);
   for(const seconds of [0,1,90,1e6]) {
     const points=scene.decorations(seconds,.37);
-    assert.equal(points.length,18);
+    // Four quiet secondary satellites replace the previous 18-object clutter;
+    // the ten accessible destination planets remain separate and unchanged.
+    assert.equal(points.length,4);
     for(const point of points) {
       finite(point,['x','y','z','perspective','physicalRadius','visibleSize','alpha']);
       assert.equal(point.alpha,.37);assert.ok(point.physicalRadius>0&&point.visibleSize>0);

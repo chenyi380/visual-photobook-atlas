@@ -1,68 +1,118 @@
-// The blue orbital ribbons are an authored navigation effect, not measured star trails.
+// Reference-led four-second opening. All positions derive from one timeline and
+// one observer; no endlessly bobbing hand or geometric line-ring substitute.
+const cosmicSmooth=(a,b,value)=>{const p=Math.max(0,Math.min(1,(value-a)/(b-a)));return p*p*(3-2*p);};
+function cosmicIntroPose(milliseconds,reducedMotion=false){
+  const t=reducedMotion?4:Math.max(0,milliseconds/1000);
+  const complete=t>=4;
+  const advance=cosmicSmooth(.8,3.85,t);
+  return {seconds:Math.min(4,t),active:!complete,
+    phase:t<.35?'black':t<.9?'fist':t<1.45?'unfurl':t<2.15?'rise':t<3.05?'satellites':t<3.55?'vortex':t<4?'closeup':'complete',
+    veil:1-cosmicSmooth(.35,.78,t),
+    reveal:cosmicSmooth(.62,1.04,t),
+    scale:.20+.92*advance,
+    center:.54-.11*cosmicSmooth(.8,2.2,t),
+    core:cosmicSmooth(2.60,3.75,t),
+    formation:cosmicSmooth(.95,1.85,t),
+    fist:cosmicSmooth(.39,.70,t)*(1-cosmicSmooth(.89,1.17,t)),
+    unfurl:cosmicSmooth(.84,1.10,t)*(1-cosmicSmooth(1.19,1.46,t)),
+    hand:cosmicSmooth(1.14,1.46,t)*(1-cosmicSmooth(3.34,4,t)),
+    handEnter:1-cosmicSmooth(.40,.86,t),
+    handExit:cosmicSmooth(3.25,4,t),
+  };
+}
+
 function cosmosPoint(angle,radius,tilt,roll,globe) {
   const x=Math.cos(angle)*radius,y=Math.sin(angle)*radius*Math.sin(tilt),z=Math.sin(angle)*radius*Math.cos(tilt);
   const c=Math.cos(roll),s=Math.sin(roll),p=12/(12-z),u=globe.planetUnit;
   return {x:globe.centerX+(x*c-y*s)*u*p,y:globe.restCenterY+(x*s+y*c)*u*p,z,depth:z/3.3,perspective:p};
 }
+function cosmosOrbit(index){
+  return {radius:index<7?2.48+(index%4)*.23:2.20+(index-7)*.08,
+    tilt:(index<7?16+index*1.4:39+(index-7)*24)*Math.PI/180,
+    roll:-.18+(index>=7?(index-8)*.39:0),physicalRadius:.13+(index%3)*.027};
+}
+// Exact extrema of (A cos(t)+B sin(t))/(1-K sin(t)). Fitting the whole
+// perspective orbit once avoids clipping at phases missed by sampled bounds.
+function cosmicProjectionBounds(radius,tilt,roll){
+  const k=radius*Math.cos(tilt)/12,denominator=1-k*k;
+  const extrema=(a,b)=>{const spread=Math.sqrt(b*b+denominator*a*a);return [(b*k-spread)/denominator,(b*k+spread)/denominator];};
+  return {x:extrema(radius*Math.cos(roll),-radius*Math.sin(tilt)*Math.sin(roll)),
+    y:extrema(radius*Math.sin(roll),radius*Math.sin(tilt)*Math.cos(roll)),maxPerspective:1/(1-Math.abs(k))};
+}
+function cosmicObserverFit(globe,scale=1.12,center=.43){
+  const unit=(globe.planetBaseUnit??globe.planetUnit)*scale;
+  const margin=Math.min(20,globe.width*.04,globe.height*.03);
+  const available=[globe.centerX-margin,globe.width-globe.centerX-margin,globe.height*center-margin,globe.height*(1-center)-margin];
+  let fit=1;
+  for(let index=0;index<10;index++){
+    const orbit=cosmosOrbit(index),bounds=cosmicProjectionBounds(orbit.radius,orbit.tilt,orbit.roll);
+    const extent=[-bounds.x[0],bounds.x[1],-bounds.y[0],bounds.y[1]],body=orbit.physicalRadius*bounds.maxPerspective;
+    for(let side=0;side<4;side++){
+      // Both the physical sphere and the accessible minimum 30px target fit.
+      fit=Math.min(fit,(available[side]-15)/(unit*extent[side]),available[side]/(unit*(extent[side]+body)));
+    }
+  }
+  return Math.max(.25,Math.min(1,fit));
+}
 class HandheldCosmos {
-  constructor(globe){this.globe=globe;this.hand=document.querySelector('#supportingHand');}
+  constructor(globe){
+    this.globe=globe;this.hand=document.querySelector('#supportingHand');this.fist=document.querySelector('#cosmicFist');this.unfurl=document.querySelector('#cosmicUnfurl');this.veil=document.querySelector('#cosmicIntroVeil');
+    this.startTime=null;this.elapsed=globe.reducedMotion?4000:0;this.pose=cosmicIntroPose(this.elapsed,globe.reducedMotion);
+    const canvas=document.querySelector('#nebulaCanvas');
+    try{this.nebula=canvas&&typeof NebulaRingRenderer!=='undefined'?new NebulaRingRenderer(canvas):null;}
+    catch(error){this.nebula=null;if(canvas)canvas.dataset.renderer='unavailable';console.info('Nebula renderer unavailable',error.message);}
+  }
+  get active(){return this.pose.active;}
+  replay(){
+    this.startTime=null;this.elapsed=this.globe.reducedMotion?4000:0;this.skipped=false;
+    if(this.globe.sceneController){this.globe.sceneController.target=0;this.globe.sceneController.progress=0;}
+  }
+  skip(){this.skipped=true;this.elapsed=4000;this.pose=cosmicIntroPose(4000);this.applyPresentation();}
+  update(time){
+    const g=this.globe;
+    if(this.startTime===null&&(g.ready||g.meshRenderer?.ready||g.reducedMotion))this.startTime=time+100;
+    this.elapsed=g.reducedMotion||this.skipped?4000:this.startTime===null?0:Math.max(0,time-this.startTime);
+    this.pose=cosmicIntroPose(this.elapsed,g.reducedMotion);
+    this.observerFit=cosmicObserverFit(g,this.pose.scale,this.pose.center);
+    g.cosmicIntroActive=this.pose.active;g.cosmicIntroCenter=this.pose.center;g.cosmicIntroScale=this.pose.scale*this.observerFit;
+    g.cosmicReveal=this.pose.reveal;g.energyStrength=1-(g.libraryBlend??0);g.energyCore=this.pose.core;g.energyTime=g.reducedMotion?0:time/1000;
+    this.applyPresentation();
+  }
+  applyPresentation(){
+    const p=this.pose,g=this.globe;
+    if(this.veil)this.veil.style.opacity=String(p.veil);
+    document.body.classList.toggle('cosmic-intro-active',p.active);
+    document.body.dataset.cosmicIntroPhase=p.phase;
+    document.body.dataset.cosmicIntroProgress=(p.seconds/4).toFixed(4);
+    const width=Math.min(g.width*.77,g.height*1.16),radius=g.planetRadius*(g.cosmicIntroScale??p.scale);
+    const cy=g.height*p.center,exit=p.handExit*g.height*.29;
+    for(const [node,opacity,size] of [[this.fist,p.fist,.66],[this.unfurl,p.unfurl,.86],[this.hand,p.hand,1]]){
+      if(!node)continue;
+      const w=width*size;
+      node.style.width=`${w.toFixed(2)}px`;node.style.left=`${(g.centerX-w*.49+p.handEnter*g.width*.34).toFixed(2)}px`;
+      node.style.top=`${(cy+radius*.60+exit).toFixed(2)}px`;node.style.opacity=String(opacity*(1-(g.libraryBlend??0)));
+      node.style.transform=`rotate(${p.handEnter*11-p.handExit*4}deg)`;
+    }
+  }
   planetPose(index,seconds){
-    const g=this.globe,radius=index<7?2.5+(index%4)*.20:2.04+(index-7)*.03,tilt=(index<7?18+index*2:48+(index-7)*21)*Math.PI/180;
+    const g=this.globe,{radius,tilt,roll,physicalRadius}=cosmosOrbit(index);
     const mean=index*2.39996+seconds*(.10/(radius/2.5)**1.5)*(index===8?-1:1);
-    const point=cosmosPoint(mean,radius,tilt,-.18+(index>=7?(index-8)*.50:0),g),physicalRadius=.12+(index%3)*.025;
+    const point=cosmosPoint(mean,radius,tilt,roll,g);
     const size=physicalRadius*2*g.planetUnit*point.perspective;
-    return {...point,scale:1,width:Math.max(30,size),height:Math.max(30,size),turn:0,roll:0,physicalRadius,visibleSize:size};
+    const starts=index<5?2.10+index*.065:2.55+(index-5)*.13;
+    const planetAlpha=g.reducedMotion?1:cosmicSmooth(starts,starts+.18,this.pose.seconds);
+    return {...point,scale:1,width:Math.max(30,size),height:Math.max(30,size),turn:0,roll:0,physicalRadius,visibleSize:size,planetAlpha};
   }
   decorations(seconds,alpha){
-    return Array.from({length:18},(_,i)=>{
-      const radius=2.62+(i%5)*.14,p=cosmosPoint(i*2.39996+seconds*.075, radius,.30+(i%3)*.08,-.18,this.globe),physicalRadius=.025+(i%4)*.008;
-      return {...p,index:i%10,physicalRadius,visibleSize:physicalRadius*2*this.globe.planetUnit*p.perspective,alpha};
+    const birth=cosmicSmooth(2.8,3.4,this.pose.seconds);
+    return Array.from({length:4},(_,i)=>{
+      const radius=2.72+i*.13,p=cosmosPoint(i*2.39996+seconds*.075,radius,.30+(i%3)*.06,-.18,this.globe),physicalRadius=.022+(i%3)*.007;
+      return {...p,index:i+4,physicalRadius,visibleSize:physicalRadius*2*this.globe.planetUnit*p.perspective,alpha:alpha*birth};
     });
   }
   occluded(p){const g=this.globe,dx=p.x-g.centerX,dy=p.y-g.restCenterY,r=g.baseRadius*g.scale,d=dx*dx+dy*dy;return d<r*r&&p.z*g.planetUnit<Math.sqrt(r*r-d);}
   draw(time,alpha){
     const g=this.globe,seconds=g.reducedMotion?0:time/1000;
-    if(this.hand){
-      const width=g.baseRadius*3.7;
-      this.hand.style.width=`${width}px`;this.hand.style.left=`${g.centerX-width*.43}px`;this.hand.style.top=`${g.restCenterY+g.baseRadius*.73}px`;
-      this.hand.style.opacity=String(alpha);this.hand.style.transform=`translateY(${g.reducedMotion?0:Math.sin(seconds*.45)*2}px)`;
-    }
-    if(alpha<=.001)return;
-    const back=g.orbitContext,front=g.effectsContext;
-    const line=(points,ctx,near,color,width,blur)=>{
-      ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.lineWidth=width;ctx.shadowBlur=blur;ctx.shadowColor='#238eff';ctx.beginPath();let pen=false;
-      for(const p of points){if((p.z>0)!==near||near&&this.occluded(p)){pen=false;continue;}if(pen)ctx.lineTo(p.x,p.y);else{ctx.moveTo(p.x,p.y);pen=true;}}
-      ctx.stroke();ctx.restore();
-    };
-    // Continuous ribbons use a single inclined annulus. Small orbital particles are
-    // sampled in its own plane; they are not random stars or planet-attached tails.
-    for(let band=0;band<25;band++){
-      const r=2.35+band*.035,phase=seconds*.12+band*.29;
-      const points=Array.from({length:181},(_,j)=>{const a=j*Math.PI*2/180;return cosmosPoint(a,r+.035*Math.sin(a*4+phase)+.018*Math.cos(a*9-phase),.31+.018*Math.sin(band),-.18,g);});
-      const core=band%5===0,color=core?'rgba(67,168,255,.40)':'rgba(27,77,241,.10)';
-      for(const [ctx,near] of [[back,false],[front,true]])line(points,ctx,near,color,core?4:2,core?22:12);
-    }
-    // Broad light packets drift within the annulus, rather than bright tails
-    // being attached to every planet. A thin cyan filament sits inside each glow.
-    for(let packet=0;packet<12;packet++){
-      const start=seconds*.11+packet*2.399963,r=2.40+(packet%6)*.117;
-      const points=Array.from({length:55},(_,j)=>{const a=start+j/54*(.38+(packet%4)*.14);return cosmosPoint(a,r+.026*Math.sin(a*5+seconds*.16),.31,-.18,g);});
-      for(const [ctx,near] of [[back,false],[front,true]]){
-        line(points,ctx,near,'rgba(35,121,255,.18)',11,28);
-        line(points,ctx,near,'rgba(90,204,255,.38)',1.4,10);
-      }
-    }
-    for(let i=0;i<420;i++){
-      const a=i*2.399963+seconds*(.035+(i%5)*.004),r=2.38+((i*73)%419)/419*.89;
-      const p=cosmosPoint(a,r,.31+(i%11-5)*.002,-.18,g),ctx=p.z>0?front:back;
-      if(p.z>0&&this.occluded(p))continue;
-      ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha*(.18+(i%7)*.07);ctx.fillStyle=i%11===0?'#e0f8ff':'#4c9dff';
-      const size=i%31===0?2:.40+(i%4)*.18;if(i%17===0){ctx.shadowBlur=7;ctx.shadowColor='#28a6ff';}ctx.beginPath();ctx.arc(p.x,p.y,size,0,Math.PI*2);ctx.fill();ctx.restore();
-    }
-    // Two restrained outer guides show that the navigation planets have distinct planes.
-    for(const index of [7,9]){
-      const points=Array.from({length:181},(_,j)=>cosmosPoint(j*Math.PI*2/180,2.04+(index-7)*.03,(48+(index-7)*21)*Math.PI/180,-.18+(index-8)*.5,g));
-      line(points,back,false,'rgba(93,132,198,.16)',.65,0);line(points,front,true,'rgba(109,163,223,.20)',.65,0);
-    }
+    this.nebula?.draw(g,seconds,alpha*this.pose.reveal,this.pose.formation);
   }
 }

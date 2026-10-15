@@ -25,9 +25,10 @@ class SceneNavigationController {
     this.progress+=(this.target-this.progress)*(this.globe.reducedMotion?1:1-Math.exp(-delta/140));
     if(Math.abs(this.progress-this.target)<.0005)this.progress=this.target;
     const g=this.globe,pose=sceneNavigationPose(this.progress,g.planetRadius,g.bookRadius);
-    g.sceneZoom=pose.zoom;g.libraryBlend=pose.blend;g.baseRadius=pose.radius;g.targetRadius=0;
-    g.planetUnit=(g.planetBaseUnit??g.planetUnit)*pose.zoom;
-    g.restCenterY=g.height*pose.center;g.centerY=g.restCenterY;
+    const introScale=1+((g.cosmicIntroScale??1)-1)*(1-pose.blend);
+    g.sceneZoom=pose.zoom;g.libraryBlend=pose.blend;g.baseRadius=pose.radius*introScale;g.targetRadius=0;
+    g.planetUnit=(g.planetBaseUnit??g.planetUnit)*pose.zoom*introScale;
+    g.restCenterY=g.height*(pose.center+((g.cosmicIntroCenter??.43)-.43)*(1-pose.blend));g.centerY=g.restCenterY;
     const opened=pose.blend>.5;
     if(opened!==this.library.opened){this.library.opened=opened;this.library.active=null;this.library.syncLabels();this.onMode(opened);}
     g.libraryOpened=opened;
@@ -61,4 +62,40 @@ function bookOrbitPoint(index,angle,globe) {
 function dampedOrbitStep(speed,target,delta,tau=100) {
   const decay=Math.exp(-delta/tau);
   return {speed:target+(speed-target)*decay,angle:target*delta+(speed-target)*tau*(1-decay)};
+}
+
+// The player's screen is a section of a cylinder seen from an elevated camera.
+// A yaw-only transform cannot reveal this bow: depth must also displace the
+// upper/lower edges vertically. The silhouette and native content use exactly
+// the same projected surface, with one continuous rim and no strip borders.
+function cylindricalPlayerGeometry(width,height,segmentCount=31) {
+  const arc=1.50,radius=width/arc,elevation=.60,camera=width*8;
+  const raw=(u,v)=>{
+    const angle=(u-.5)*arc,x=radius*Math.sin(angle),z=radius*(Math.cos(angle)-1),y=(v-.5)*height;
+    const screenY=y*Math.cos(elevation)+z*Math.sin(elevation);
+    const depth=z*Math.cos(elevation)-y*Math.sin(elevation),p=camera/(camera-depth);
+    return {x:x*p,y:screenY*p};
+  };
+  const bounds=[];
+  for(let n=0;n<=64;n++)for(const v of [0,1])bounds.push(raw(n/64,v));
+  const minX=Math.min(...bounds.map(p=>p.x)),maxX=Math.max(...bounds.map(p=>p.x));
+  const minY=Math.min(...bounds.map(p=>p.y)),maxY=Math.max(...bounds.map(p=>p.y));
+  const project=(u,v)=>{const p=raw(u,v);return {x:(p.x-minX)*width/(maxX-minX),y:(p.y-minY)*height/(maxY-minY)};};
+  const rx=Math.min(.045,8/width),ry=Math.min(.075,8/height),boundary=[];
+  const edge=(u0,v0,u1,v1,count=32)=>{for(let n=0;n<=count;n++){const t=n/count;boundary.push(project(u0+(u1-u0)*t,v0+(v1-v0)*t));}};
+  const corner=(cx,cy,from,to)=>{for(let n=1;n<=8;n++){const a=from+(to-from)*n/8;boundary.push(project(cx+rx*Math.cos(a),cy+ry*Math.sin(a)));}};
+  edge(rx,0,1-rx,0);corner(1-rx,ry,-Math.PI/2,0);
+  edge(1,ry,1,1-ry,8);corner(1-rx,1-ry,0,Math.PI/2);
+  edge(1-rx,1,rx,1);corner(rx,1-ry,Math.PI/2,Math.PI);
+  edge(0,1-ry,0,ry,8);corner(rx,ry,Math.PI,Math.PI*1.5);
+  const path=boundary.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(3)} ${p.y.toFixed(3)}`).join(' ')+' Z';
+  const strips=Array.from({length:segmentCount},(_,i)=>{
+    const u0=i/segmentCount,u1=(i+1)/segmentCount,u=(u0+u1)/2,w=width/segmentCount;
+    const left=project(u0,.5),right=project(u1,.5),top=project(u,0),bottom=project(u,1),center=project(u,.5);
+    const a=(right.x-left.x)/w,b=(right.y-left.y)/w,c=(bottom.x-top.x)/height,d=(bottom.y-top.y)/height;
+    return {matrix:[a,b,c,d,center.x-a*w/2-c*height/2,center.y-b*w/2-d*height/2],width:w};
+  });
+  const topBow=project(.5,0).y-(project(0,0).y+project(1,0).y)/2;
+  const bottomBow=project(.5,1).y-(project(0,1).y+project(1,1).y)/2;
+  return {width,height,path,strips,topBow,bottomBow,project};
 }

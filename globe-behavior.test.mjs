@@ -217,7 +217,7 @@ test('Earth drag rotates in both directions and clamps latitude without a jump',
 });
 
 test('curved books use tangent strips; photo projections retain aspect and do not claim exact GPS',async()=>{
-  assert.match(orbitSource,/tile-segment/);assert.match(orbitSource,/radius\*Math\.sin\(angle\)/);assert.match(orbitSource,/radius\*\(Math\.cos\(angle\)-1\)/);
+  assert.match(orbitSource,/tile-segment/);assert.match(orbitSource,/cylindricalPlayerGeometry/);assert.match(orbitSource,/player-shell/);assert.match(orbitSource,/geometry\.strips\[i\]\.matrix/);
   const controller=await readFile(new URL('src/atlas-controller.js',root),'utf8');
   assert.match(controller,/height=width\/ratio/);assert.match(controller,/Approximate area/);
   assert.doesNotMatch(controller,/projectionMap'\)\.src = ATLAS_HOLOGRAM_MAPS/);
@@ -295,8 +295,8 @@ test('cinematic journey crosses space, atmosphere, cloud sea and opening before 
   const journeySource=await readFile(new URL('src/book-journey.js',root),'utf8');
   vm.runInContext(journeySource+'\nthis.journeyTools={journeyPhase,journeyCurve,BookJourneyController};',context);
   const {journeyPhase:phase,journeyCurve:curve,BookJourneyController:Journey}=context.journeyTools;
-  for(const [time,expected] of [[0,'departure'],[699,'departure'],[700,'space'],[2050,'atmosphere'],[3350,'clouds'],[4800,'destination'],[6000,'materialize'],[7250,'opening'],[9599,'opening'],[9600,'complete']])assert.equal(phase(time).phase,expected);
-  let lastProgress=0;for(let time=0;time<=9700;time+=17){const s=phase(time);assert.ok(s.totalProgress>=lastProgress&&s.totalProgress<=1);assert.ok(s.progress>=0&&s.progress<=1);lastProgress=s.totalProgress;}
+  for(const [time,expected] of [[0,'departure'],[549,'departure'],[550,'space'],[1600,'atmosphere'],[2850,'clouds'],[4050,'destination'],[4850,'materialize'],[6100,'opening'],[7999,'opening'],[8000,'complete']])assert.equal(phase(time).phase,expected);
+  let lastProgress=0;for(let time=0;time<=8100;time+=17){const s=phase(time);assert.ok(s.totalProgress>=lastProgress&&s.totalProgress<=1);assert.ok(s.progress>=0&&s.progress<=1);lastProgress=s.totalProgress;}
   assert.equal(phase(219,true).phase,'opening');assert.equal(phase(220,true).phase,'complete');
   assert.deepEqual(JSON.parse(JSON.stringify(curve({x:10,y:20},{x:90,y:70},1,720))),{x:90,y:70});
   const gradient={addColorStop(){}},ctx=new Proxy({globalAlpha:1}, {get:(o,key)=>o[key]??(key.startsWith('create')?()=>gradient:()=>{}),set:(o,key,value)=>(o[key]=value,true)});
@@ -309,10 +309,11 @@ test('cinematic journey crosses space, atmosphere, cloud sea and opening before 
     const style={setProperty(name,value){this[name]=value;}},leaves=Array.from({length:5},()=>({style:{setProperty(){}}}));
     return Object.assign(Object.create(Journey.prototype),{active:{start:0,book:books[0],origin:{x:450/1280,y:500/720},target:{x:.6,y:.17},sourceWidth:220,photo:new context.Image()},generation:1,imageCache:new Map(),globe:mockGlobe(),library:{busy:true,previewHeld:true},context:ctx,ratio:1,bookWidth:230,cloudSea:new context.Image(),cloudSprites:Array.from({length:5},()=>({})),canvas:{dataset:{},classList:{add(){},remove(){}}},card:{style,querySelectorAll:()=>leaves,remove(){}},projection:{getBoundingClientRect:()=>({x:300,y:20,width:600,height:450})},onComplete(){opens++;},onCancel(){cancels++;}});
   };
-  const travel=make();for(const time of [0,699,700,1500,2050,2800,3350,4100,4800,5999,6000,6750,7250,8500,9599]){travel.frame(time);assert.equal(opens,0);}
+  const travel=make();for(const time of [0,549,550,1300,1600,2100,2850,3350,4050,4500,4850,5500,6100,7200,7800,7999]){travel.frame(time);assert.equal(opens,0);}
   assert.equal(travel.canvas.dataset.cloudImage,'ready');assert.equal(travel.canvas.dataset.destinationImage,'ready');assert.ok(Number(travel.canvas.dataset.totalProgress)>.99);
-  travel.frame(9600);travel.frame(9800);assert.equal(opens,1);assert.equal(travel.library.busy,false);assert.equal(context.document.body.dataset.journey,'idle');assert.ok(cancelledFrames.length>0);
-  const cancel=make();assert.equal(cancel.cancel(),true);cancel.frame(9600);assert.equal(opens,1);assert.equal(cancels,1);assert.equal(cancel.cancel(),false);
+  assert.equal(travel.canvas.dataset.bookGeometry,'perspective-hardcover-fan');assert.ok(Number(travel.canvas.dataset.bookPitch)>55);assert.ok(Number(travel.canvas.dataset.bookOpen)>.99);
+  travel.frame(8000);travel.frame(8200);assert.equal(opens,1);assert.equal(travel.library.busy,false);assert.equal(context.document.body.dataset.journey,'idle');assert.ok(cancelledFrames.length>0);
+  const cancel=make();assert.equal(cancel.cancel(),true);cancel.frame(8000);assert.equal(opens,1);assert.equal(cancels,1);assert.equal(cancel.cancel(),false);
   const reduced=make();reduced.globe.reducedMotion=true;reduced.frame(219);assert.equal(opens,1);reduced.frame(220);assert.equal(opens,2);
   const start=make();start.active=null;start.makeBook=()=>{};const button={getBoundingClientRect:()=>({x:340,y:450,width:220,height:100})};
   assert.equal(start.start(books[0],button,books[0]),true);assert.equal(start.start(books[0],button,books[0]),false,'repeat clicks cannot start a second animation');
